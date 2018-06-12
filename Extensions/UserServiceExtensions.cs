@@ -13,6 +13,7 @@ namespace DiscordBot.Extensions
         /// </summary>
         /// <param name="cooldowns"></param>
         /// <param name="userId"></param>
+        /// <param name="evenIfCooldownNowOver"></param>
         /// <returns></returns>
         public static bool HasUser(this Dictionary<ulong, DateTime> cooldowns, ulong userId, bool evenIfCooldownNowOver = false)
         {
@@ -44,7 +45,7 @@ namespace DiscordBot.Extensions
         public static void AddCooldown(this Dictionary<ulong, DateTime> cooldowns, ulong userId, int seconds = 0, int minutes = 0,
             int hours = 0, int days = 0, bool ignoreExisting = false)
         {
-            TimeSpan cooldownTime = new TimeSpan(days, hours, minutes, seconds);
+            var cooldownTime = new TimeSpan(days, hours, minutes, seconds);
 
             if (cooldowns.HasUser(userId))
             {
@@ -72,34 +73,17 @@ namespace DiscordBot.Extensions
             cooldowns.AddCooldown(userId, days: (enabled) ? 9999 : 0, ignoreExisting: true);
         }
 
-        public static bool IsPermanent(this Dictionary<ulong, DateTime> cooldowns, ulong userId)
-        {
-            return cooldowns.Days(userId) > 5000;
-        }
+        public static bool IsPermanent(this Dictionary<ulong, DateTime> cooldowns, ulong userId) => cooldowns.Days(userId) > 5000;
 
-        public static double Days(this Dictionary<ulong, DateTime> cooldowns, ulong userId)
-        {
-            return (cooldowns.HasUser(userId)) ? cooldowns[userId].Subtract(DateTime.Now).TotalDays : 0;
-        }
+        public static double Days(this Dictionary<ulong, DateTime> cooldowns, ulong userId) => (cooldowns.HasUser(userId)) ? cooldowns[userId].Subtract(DateTime.Now).TotalDays : 0;
 
-        public static double Hours(this Dictionary<ulong, DateTime> cooldowns, ulong userId)
-        {
-            return (cooldowns.HasUser(userId)) ? cooldowns[userId].Subtract(DateTime.Now).TotalHours : 0;
-        }
+        public static double Hours(this Dictionary<ulong, DateTime> cooldowns, ulong userId) => (cooldowns.HasUser(userId)) ? cooldowns[userId].Subtract(DateTime.Now).TotalHours : 0;
 
-        public static double Minutes(this Dictionary<ulong, DateTime> cooldowns, ulong userId)
-        {
-            return (cooldowns.HasUser(userId)) ? cooldowns[userId].Subtract(DateTime.Now).TotalMinutes : 0;
-        }
+        public static double Minutes(this Dictionary<ulong, DateTime> cooldowns, ulong userId) => (cooldowns.HasUser(userId)) ? cooldowns[userId].Subtract(DateTime.Now).TotalMinutes : 0;
 
-        public static double Seconds(this Dictionary<ulong, DateTime> cooldowns, ulong userId)
-        {
-            return (cooldowns.HasUser(userId)) ? cooldowns[userId].Subtract(DateTime.Now).TotalSeconds : 0;
-        }
-        public static double Milliseconds(this Dictionary<ulong, DateTime> cooldowns, ulong userId)
-        {
-            return (cooldowns.HasUser(userId)) ? cooldowns[userId].Subtract(DateTime.Now).TotalMilliseconds : 0;
-        }
+        public static double Seconds(this Dictionary<ulong, DateTime> cooldowns, ulong userId) => (cooldowns.HasUser(userId)) ? cooldowns[userId].Subtract(DateTime.Now).TotalSeconds : 0;
+
+        public static double Milliseconds(this Dictionary<ulong, DateTime> cooldowns, ulong userId) => (cooldowns.HasUser(userId)) ? cooldowns[userId].Subtract(DateTime.Now).TotalMilliseconds : 0;
 
         /// <summary>
         /// Returns when the cooldown list no-longer contains the user.

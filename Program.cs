@@ -7,6 +7,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Extensions;
+using DiscordBot.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DiscordBot
@@ -190,13 +191,13 @@ namespace DiscordBot
             _databaseService.AddNewUser(user);
 
             //Check for existing mute
-            if (_userService._mutedUsers.HasUser(user.Id))
+            if (_userService.MutedUsers.HasUser(user.Id))
             {
                 await user.AddRoleAsync(Settings.GetMutedRole(user.Guild));
                 await _loggingService.LogAction(
                 $"Currently muted user rejoined - {user.Mention} - `{user.Username}#{user.DiscriminatorValue}` - ID : `{user.Id}`");
                 await socketTextChannel.SendMessageAsync($"{user.Mention} tried to rejoin the server to avoid their mute. Mute time increased by 72 hours.");
-                _userService._mutedUsers.AddCooldown(user.Id, hours: 72);
+                _userService.MutedUsers.AddCooldown(user.Id, hours: 72);
                 return;
             }
 

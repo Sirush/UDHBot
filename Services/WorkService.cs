@@ -1,29 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 
-namespace DiscordBot
+namespace DiscordBot.Services
 {
     public class WorkService
     {
         private class Work
         {
-            public IGuildUser User;
-            public DateTime Added;
-            public IMessage Message;
-            public ISocketMessageChannel Channel;
-            public ulong Role;
+            public readonly IGuildUser User;
+            public readonly DateTime Added;
+            private IMessage _message;
+            public readonly ISocketMessageChannel Channel;
+            public readonly ulong Role;
 
             public Work(IGuildUser user, DateTime added, IMessage message, ISocketMessageChannel iSocketMessageChannel, ulong role)
             {
                 User = user;
                 Added = added;
-                Message = message;
+                _message = message;
                 Channel = iSocketMessageChannel;
                 Role = role;
             }
@@ -33,7 +31,7 @@ namespace DiscordBot
         private static ulong _hiringChannel, _lookingForWorkChannel, _collaborationChannel;
         private static int _daysToBeLockedOut, _daysToRemoveMessage;
 
-        private static readonly List<Work> allWork = new List<Work>();
+        private static readonly List<Work> AllWork = new List<Work>();
 
         public WorkService()
         {
@@ -46,22 +44,22 @@ namespace DiscordBot
 
         public async void TimerUpdate()
         {
-            if (allWork == null || allWork.Count <= 0) return;
+            if (AllWork == null || AllWork.Count <= 0) return;
 
-            Work[] finishedWorks = allWork.Where(x => x.Added.Subtract(DateTime.Now).TotalSeconds >= _daysToBeLockedOut)
+            var finishedWorks = AllWork.Where(x => x.Added.Subtract(DateTime.Now).TotalSeconds >= _daysToBeLockedOut)
                 .ToArray();
-            Work[] finishedUserMute = finishedWorks.Where(x => x.User != null).ToArray();
-            Work[] finishedMessages = finishedWorks
+            var finishedUserMute = finishedWorks.Where(x => x.User != null).ToArray();
+            var finishedMessages = finishedWorks
                 .Where(x => x.Added.Subtract(DateTime.Now).TotalSeconds >= _daysToRemoveMessage).ToArray();
 
-            foreach (Work w in finishedUserMute)
+            foreach (var w in finishedUserMute)
             {
                 await UserAddAccess(w);
             }
-            foreach (Work w in finishedMessages)
+            foreach (var w in finishedMessages)
             {
                 await MessageRemove(w);
-                allWork.Remove(w);
+                AllWork.Remove(w);
             }
         }
 
@@ -69,7 +67,7 @@ namespace DiscordBot
         {
             IChannel channel = messageParam.Channel;
             Work work = null;
-            bool flag = false;
+            var flag = false;
             if (channel.Id == _lookingForWorkChannel)
             {
                 if (messageParam.Author.IsBot)
@@ -84,7 +82,7 @@ namespace DiscordBot
                 await DuplicateUserMsg(work.Channel, work.User, messageParam.Timestamp, messageParam.Content, work.User.Username,
                     work.User.GetAvatarUrl());
             }
-            else if (!flag && channel.Id == _hiringChannel)
+            else if (channel.Id == _hiringChannel)
             {
                 if (messageParam.Author.IsBot)
                 {
@@ -98,7 +96,7 @@ namespace DiscordBot
                 await DuplicateUserMsg(work.Channel, work.User, messageParam.Timestamp, messageParam.Content, work.User.Username,
                     work.User.GetAvatarUrl());
             }
-            else if (!flag && channel.Id == _collaborationChannel)
+            else if (channel.Id == _collaborationChannel)
             {
                 if (messageParam.Author.IsBot)
                 {
@@ -112,7 +110,7 @@ namespace DiscordBot
                 await DuplicateUserMsg(work.Channel, work.User, messageParam.Timestamp, messageParam.Content, work.User.Username,
                     work.User.GetAvatarUrl());
             }
-            if (flag) allWork.Add(work);
+            if (flag) AllWork.Add(work);
         }
 
         private async Task UserRemoveAccess(Work work)
@@ -140,9 +138,9 @@ namespace DiscordBot
 
             var u = user as IGuildUser;
             IRole mainRole = null;
-            foreach (ulong id in u.RoleIds)
+            foreach (var id in u.RoleIds)
             {
-                IRole role = u.Guild.GetRole(id);
+                var role = u.Guild.GetRole(id);
                 if (mainRole == null)
                     mainRole = u.Guild.GetRole(id);
                 else if (role.Position > mainRole.Position)
@@ -150,9 +148,9 @@ namespace DiscordBot
                     mainRole = role;
                 }
             }
-            Color c = mainRole.Color;
+            var c = mainRole.Color;
 
-            EmbedBuilder builder = new EmbedBuilder()
+            var builder = new EmbedBuilder()
                 .WithColor(c)
                 .WithTimestamp(timestamp.UtcDateTime)
                 .WithDescription(content)
@@ -163,7 +161,7 @@ namespace DiscordBot
                         .WithIconUrl(icon);
                 });
             Console.WriteLine("after");
-            Embed embed = builder.Build();
+            var embed = builder.Build();
             await channel.SendMessageAsync("", false, embed);
         }
     }

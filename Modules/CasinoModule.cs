@@ -1,18 +1,16 @@
 ﻿using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using DiscordBot.Services;
 
-namespace DiscordBot
+namespace DiscordBot.Modules
 {
     public class CasinoModule : ModuleBase
     {
         private readonly CasinoService _casinoService;
 
 
-        public CasinoModule(CasinoService casinoService)
-        {
-            _casinoService = casinoService;
-        }
+        public CasinoModule(CasinoService casinoService) => _casinoService = casinoService;
 
         [Command("slot"), Summary("Play the slot machine. Syntax : !slot amount")]
         [Alias("slotmachine")]
@@ -25,7 +23,7 @@ namespace DiscordBot
                 return;
             }
 
-            IUser user = Context.User;
+            var user = Context.User;
 
             var reply = _casinoService.PlaySlotMachine(user, amount);
             if (reply.imagePath != null)
@@ -45,7 +43,7 @@ namespace DiscordBot
                 return;
             }
 
-            IUser user = Context.User;
+            var user = Context.User;
 
             await ReplyAsync($"{user.Mention} you have **{_casinoService.GetUserUdc(user.Id)}**UDC");
         }

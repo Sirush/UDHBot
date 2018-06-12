@@ -8,10 +8,11 @@ using System.Web;
 using Discord;
 using Discord.Commands;
 using DiscordBot.Extensions;
+using DiscordBot.Services;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 
-namespace DiscordBot
+namespace DiscordBot.Modules
 {
     public class UserModule : ModuleBase
     {
@@ -60,9 +61,9 @@ namespace DiscordBot
         [Alias("rule")]
         private async Task Rules(IMessageChannel channel)
         {
-            Rule rule = Settings.GetRule(channel.Id);
+            var rule = Settings.GetRule(channel.Id);
             //IUserMessage m; //Unused, plan to be used in future?
-            IDMChannel dm = await Context.User.GetOrCreateDMChannelAsync();
+            var dm = await Context.User.GetOrCreateDMChannelAsync();
             if (rule == null)
             {
                 await dm.SendMessageAsync(
@@ -74,15 +75,15 @@ namespace DiscordBot
                     $"{rule.header}{(rule.content.Length > 0 ? rule.content : "There is no special rule for this channel.\nPlease follow global rules (you can get them by typing `!globalrules`)")}");
             }
 
-            Task deleteAsync = Context.Message?.DeleteAsync();
+            var deleteAsync = Context.Message?.DeleteAsync();
             if (deleteAsync != null) await deleteAsync;
         }
 
         [Command("globalrules"), Summary("Get the Global Rules by DM. Syntax : !globalrules")]
         private async Task GlobalRules(int seconds = 60)
         {
-            string globalRules = Settings.GetRule(0).content;
-            IDMChannel dm = await Context.User.GetOrCreateDMChannelAsync();
+            var globalRules = Settings.GetRule(0).content;
+            var dm = await Context.User.GetOrCreateDMChannelAsync();
             await dm.SendMessageAsync(globalRules);
             await Context.Message.DeleteAsync();
         }
@@ -91,13 +92,13 @@ namespace DiscordBot
         private async Task ChannelsDescription()
         {
             //Display rules of this channel for x seconds
-            List<(ulong, string)> headers = Settings.GetChannelsHeader();
-            StringBuilder sb = new StringBuilder();
+            var headers = Settings.GetChannelsHeader();
+            var sb = new StringBuilder();
             foreach (var h in headers)
                 sb.Append((await Context.Guild.GetTextChannelAsync(h.Item1))?.Mention).Append(" - ").Append(h.Item2).Append("\n");
-            string text = sb.ToString();
+            var text = sb.ToString();
 
-            IDMChannel dm = await Context.User.GetOrCreateDMChannelAsync();
+            var dm = await Context.User.GetOrCreateDMChannelAsync();
 
             if (sb.ToString().Length > 2000)
             {
@@ -129,9 +130,9 @@ namespace DiscordBot
         {
             var users = _databaseService.GetTopLevel();
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append("Here's the top 10 of users by level :");
-            for (int i = 0; i < users.Count; i++)
+            for (var i = 0; i < users.Count; i++)
                 sb.Append(
                     $"\n#{i + 1} - **{(await Context.Guild.GetUserAsync(users[i].userId)).Username}** ~ *Level* **{users[i].level}**");
 
@@ -144,9 +145,9 @@ namespace DiscordBot
         {
             var users = _databaseService.GetTopKarma();
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append("Here's the top 10 of users by karma :");
-            for (int i = 0; i < users.Count; i++)
+            for (var i = 0; i < users.Count; i++)
                 sb.Append(
                     $"\n#{i + 1} - **{(await Context.Guild.GetUserAsync(users[i].userId)).Username}** ~ **{users[i].karma}** *Karma*");
 
@@ -159,9 +160,9 @@ namespace DiscordBot
         {
             var users = _databaseService.GetTopUdc();
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append("Here's the top 10 of users by UDC :");
-            for (int i = 0; i < users.Count; i++)
+            for (var i = 0; i < users.Count; i++)
                 sb.Append($"\n#{i + 1} - **{(await Context.Guild.GetUserAsync(users[i].userId)).Username}** ~ **{users[i].udc}** *UDC*");
 
             await ReplyAsync(sb.ToString()).DeleteAfterTime(minutes: 3);
@@ -169,11 +170,11 @@ namespace DiscordBot
 
         [Command("codetip"), Summary("Show code formatting example. Syntax : !codetip userToPing(optional)")]
         [Alias("codetips")]
-        private async Task CodeTip(IUser user = null)
+        private async Task CodeTip(IMentionable user = null)
         {
             var message = (user != null) ? user.Mention + ", " : "";
             message += "When posting code, format it like this to display it properly:" + Environment.NewLine;
-            message += _userService._codeFormattingExample;
+            message += _userService.CodeFormattingExample;
             await Context.Message.DeleteAsync();
             await ReplyAsync(message).DeleteAfterSeconds(240);
         }
@@ -182,10 +183,10 @@ namespace DiscordBot
          Summary("Prevents being reminded about using proper code formatting when code is detected. Syntax : !disablecodetips")]
         private async Task DisableCodeTips()
         {
-            ulong userID = Context.User.Id;
-            string replyMessage = "You've already told me to stop reminding you, don't worry, I won't forget!";
+            var userId = Context.User.Id;
+            var replyMessage = "You've already told me to stop reminding you, don't worry, I won't forget!";
 
-            if (!_userService.CodeReminderCooldown.IsPermanent(userID))
+            if (!_userService.CodeReminderCooldown.IsPermanent(userId))
             {
                 replyMessage = "I will no longer remind you about using proper code formatting.";
                 _userService.CodeReminderCooldown.SetPermanent(Context.User.Id, true);
@@ -198,10 +199,10 @@ namespace DiscordBot
          Summary("Prevents being reminded to mention the person you are thanking. Syntax : !disablethanksreminder")]
         private async Task DisableThanksReminder()
         {
-            ulong userID = Context.User.Id;
-            string replyMessage = "You've already told me to stop reminding you, don't worry, I won't forget!";
+            var userId = Context.User.Id;
+            var replyMessage = "You've already told me to stop reminding you, don't worry, I won't forget!";
 
-            if (!_userService.ThanksReminderCooldown.IsPermanent(userID))
+            if (!_userService.ThanksReminderCooldown.IsPermanent(userId))
             {
                 replyMessage = "I will no longer remind you to mention the person you're thanking... (◕︿◕✿)";
                 _userService.ThanksReminderCooldown.SetPermanent(Context.User.Id, true);
@@ -213,7 +214,7 @@ namespace DiscordBot
         [Command("slap"), Summary("Slap the specified user(s). Syntax : !slap @user1 [@user2 @user3...]")]
         private async Task SlapUser(params IUser[] users)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             string[] slaps = {"trout", "duck", "truck"};
             var random = new Random();
 
@@ -233,7 +234,7 @@ namespace DiscordBot
         [Command("profile"), Summary("Display current user profile card. Syntax : !profile")]
         private async Task DisplayProfile()
         {
-            IUserMessage profile = await Context.Channel.SendFileAsync(await _userService.GenerateProfileCard(Context.Message.Author));
+            var profile = await Context.Channel.SendFileAsync(await _userService.GenerateProfileCard(Context.Message.Author));
 
             await Task.Delay(10000);
             await Context.Message.DeleteAsync();
@@ -244,7 +245,7 @@ namespace DiscordBot
         [Command("profile"), Summary("Display profile card of mentionned user. Syntax : !profile @user")]
         private async Task DisplayProfile(IUser user)
         {
-            IUserMessage profile = await Context.Channel.SendFileAsync(await _userService.GenerateProfileCard(user));
+            var profile = await Context.Channel.SendFileAsync(await _userService.GenerateProfileCard(user));
 
             await Task.Delay(1000);
             await Context.Message.DeleteAsync();
@@ -256,7 +257,7 @@ namespace DiscordBot
         private async Task QuoteMessage(ulong id)
         {
             await Context.Message.DeleteAsync();
-            IMessageChannel channel = Context.Channel;
+            var channel = Context.Channel;
             var message = await channel.GetMessageAsync(id);
             Console.WriteLine($"message {message.Author.Username}  {message.Channel.Name}");
             var builder = new EmbedBuilder()
@@ -308,7 +309,7 @@ namespace DiscordBot
         [Alias("code", "compute", "assert")]
         private async Task CompileCode(params string[] code)
         {
-            string codeComplete =
+            var codeComplete =
                 $"using System;\nusing System.Collections.Generic;\n\n\tpublic class Hello\n\t{{\n\t\tpublic static void Main()\n\t\t{{\n\t\t\t{String.Join(" ", code)}\n\t\t}}\n\t}}\n";
 
             var parameters = new Dictionary<string, string>
@@ -322,14 +323,14 @@ namespace DiscordBot
             var message = await ReplyAsync("Please wait a moment, trying to compile your code interpreted as\n" +
                                            $"```cs\n{codeComplete}```");
 
-            using (HttpClient client = new HttpClient())
+            using (var client = new HttpClient())
             {
-                HttpResponseMessage httpResponse = await client.PostAsync("http://api.paiza.io/runners/create", content);
+                var httpResponse = await client.PostAsync("http://api.paiza.io/runners/create", content);
                 var response = JsonConvert.DeserializeObject<Dictionary<string, string>>(await httpResponse.Content.ReadAsStringAsync());
 
-                string id = response["id"];
+                var id = response["id"];
                 string status;
-                DateTime startTime = DateTime.Now;
+                var startTime = DateTime.Now;
                 const int maxTime = 30;
 
                 do
@@ -349,22 +350,22 @@ namespace DiscordBot
                     return;
                 }
 
-                string build_stddout = response["build_stdout"];
-                string stdout = response["stdout"];
-                string stderr = response["stderr"];
-                string build_stderr = response["build_stderr"];
-                string result = response["build_result"];
+                var buildStddout = response["build_stdout"];
+                var stdout = response["stdout"];
+                var stderr = response["stderr"];
+                var buildStderr = response["build_stderr"];
+                var result = response["build_result"];
 
                 string fullMessage;
 
                 if (result == "failure")
                 {
                     fullMessage = message.Content + "The code resulted in a failure.\n"
-                                                  + (build_stddout.Length > 0
-                                                      ? $"```cs\n{build_stddout}```\n"
+                                                  + (buildStddout.Length > 0
+                                                      ? $"```cs\n{buildStddout}```\n"
                                                       : "") +
-                                                  (build_stderr.Length > 0
-                                                      ? $"```cs\n{build_stderr}\n"
+                                                  (buildStderr.Length > 0
+                                                      ? $"```cs\n{buildStderr}\n"
                                                       : "```");
                 }
                 else
@@ -386,7 +387,7 @@ namespace DiscordBot
         [Alias("flipcoin")]
         private async Task CoinFlip()
         {
-            Random rand = new Random();
+            var rand = new Random();
             var coin = new[] {"Heads", "Tails"};
 
             await ReplyAsync($"**{Context.User.Username}** flipped a coin and got **{coin[rand.Next() % 2]}** !");
@@ -417,7 +418,7 @@ namespace DiscordBot
                 return;
             }
 
-            Random rand = new Random();
+            var rand = new Random();
             var coin = new[] {"Heads", "Tails"};
 
             await ReplyAsync($"\n" +
@@ -440,7 +441,7 @@ namespace DiscordBot
                 return;
             }
 
-            (bool, string) verif = await _publisherService.VerifyPackage(packageId);
+            var verif = await _publisherService.VerifyPackage(packageId);
             await ReplyAsync(verif.Item2);
         }
 
@@ -454,7 +455,7 @@ namespace DiscordBot
                 return;
             }
 
-            string verif = await _publisherService.ValidatePackageWithCode(Context.Message.Author, packageId, code);
+            var verif = await _publisherService.ValidatePackageWithCode(Context.Message.Author, packageId, code);
             await ReplyAsync(verif);
         }
 
@@ -464,26 +465,26 @@ namespace DiscordBot
         {
             // Cleaning inputs from user (maybe we can ban certain domains or keywords)
             resNum = resNum <= 5 ? resNum : 5;
-            string searchQuery = "https://duckduckgo.com/html/?q=" + query.Replace(' ', '+');
+            var searchQuery = "https://duckduckgo.com/html/?q=" + query.Replace(' ', '+');
 
             if (!site.Equals(""))
             {
                 searchQuery += "+site:" + site;
             }
 
-            HtmlDocument doc = new HtmlWeb().Load(searchQuery);
-            int counter = 1;
-            List<string> results = new List<string>();
+            var doc = new HtmlWeb().Load(searchQuery);
+            var counter = 1;
+            var results = new List<string>();
 
             // XPath for DuckDuckGo as of 10/05/2018, if results stop showing up, check this first!
-            foreach (HtmlNode row in doc.DocumentNode.SelectNodes("/html/body/div[1]/div[3]/div/div/div[*]/div/h2/a"))
+            foreach (var row in doc.DocumentNode.SelectNodes("/html/body/div[1]/div[3]/div/div/div[*]/div/h2/a"))
             {
                 // Check if we are within the allowed number of results and if the result is valid (i.e. no evil ads)
                 if (counter <= resNum && IsValidResult(row))
                 {
-                    string title = HttpUtility.UrlDecode(row.InnerText);
-                    string url = HttpUtility.UrlDecode(row.Attributes["href"].Value.Replace("/l/?kh=-1&amp;uddg=", ""));
-                    string msg = "";
+                    var title = HttpUtility.UrlDecode(row.InnerText);
+                    var url = HttpUtility.UrlDecode(row.Attributes["href"].Value.Replace("/l/?kh=-1&amp;uddg=", ""));
+                    var msg = "";
 
                     // Added line for pretty output
                     if (counter > 1)
@@ -498,17 +499,14 @@ namespace DiscordBot
             }
 
             // Send each result as separate message for embedding
-            foreach (string msg in results)
+            foreach (var msg in results)
             {
                 await ReplyAsync(msg);
             }
 
             // Utility function for avoiding evil ads from DuckDuckGo
-            bool IsValidResult(HtmlNode node)
-            {
-                return !node.Attributes["href"].Value.Contains("duckduckgo.com") &&
-                       !node.Attributes["href"].Value.Contains("duck.co");
-            }
+            bool IsValidResult(HtmlNode node) => !node.Attributes["href"].Value.Contains("duckduckgo.com") &&
+                                                 !node.Attributes["href"].Value.Contains("duck.co");
         }
 
         [Command("manual"), Summary("Searches on Unity3D manual results. Syntax : !manual \"query\"")]
@@ -517,13 +515,13 @@ namespace DiscordBot
             // Download Unity3D Documentation Database (lol)
 
             // Calculate the closest match to the input query
-            double minimumScore = double.MaxValue;
+            var minimumScore = double.MaxValue;
             string[] mostSimilarPage = null;
-            string[][] pages = await _updateService.GetManualDatabase();
-            string query = String.Join(" ", queries);
-            foreach (string[] p in pages)
+            var pages = await _updateService.GetManualDatabase();
+            var query = string.Join(" ", queries);
+            foreach (var p in pages)
             {
-                double curScore = CalculateScore(p[1], query);
+                var curScore = CalculateScore(p[1], query);
                 if (curScore < minimumScore)
                 {
                     minimumScore = curScore;
@@ -545,13 +543,13 @@ namespace DiscordBot
             // Download Unity3D Documentation Database (lol)
 
             // Calculate the closest match to the input query
-            double minimumScore = double.MaxValue;
+            var minimumScore = double.MaxValue;
             string[] mostSimilarPage = null;
-            string[][] pages = await _updateService.GetApiDatabase();
-            string query = String.Join(" ", queries);
-            foreach (string[] p in pages)
+            var pages = await _updateService.GetApiDatabase();
+            var query = string.Join(" ", queries);
+            foreach (var p in pages)
             {
-                double curScore = CalculateScore(p[1], query);
+                var curScore = CalculateScore(p[1], query);
                 if (curScore < minimumScore)
                 {
                     minimumScore = curScore;
@@ -570,11 +568,11 @@ namespace DiscordBot
         private double CalculateScore(string s1, string s2)
         {
             double curScore = 0;
-            int i = 0;
+            var i = 0;
 
-            foreach (string q in s1.Split(" "))
+            foreach (var q in s1.Split(" "))
             {
-                foreach (string x in s2.Split(" "))
+                foreach (var x in s2.Split(" "))
                 {
                     i++;
                     if (x.Equals(q))
@@ -591,12 +589,12 @@ namespace DiscordBot
         [Command("faq"), Summary("Searches UDH FAQs. Syntax : !faq \"query\"")]
         private async Task SearchFaqs(params string[] queries)
         {
-            List<FaqData> faqDataList = _updateService.GetFaqData();
+            var faqDataList = _updateService.GetFaqData();
 
             // Check if query is faq ID (e.g. "!faq 1")
             if (queries.Length == 1 && ParseNumber(queries[0]) > 0)
             {
-                int id = ParseNumber(queries[0]) - 1;
+                var id = ParseNumber(queries[0]) - 1;
                 if (id < faqDataList.Count)
                 {
                     await ReplyAsync(embed: GetFaqEmbed(id + 1, faqDataList[id]));
@@ -610,18 +608,18 @@ namespace DiscordBot
             else if (queries.Length > 0 && !(queries.Length == 1 && queries[0].Equals("list")))
             {
                 // Calculate the closest match to the input query
-                double minimumScore = double.MaxValue;
+                var minimumScore = double.MaxValue;
                 FaqData mostSimilarFaq = null;
-                string query = String.Join(" ", queries);
-                int index = 1;
-                int mostSimilarIndex = 0;
+                var query = string.Join(" ", queries);
+                var index = 1;
+                var mostSimilarIndex = 0;
 
                 // Go through each FAQ in the list and check the most similar
-                foreach (FaqData faq in faqDataList)
+                foreach (var faq in faqDataList)
                 {
-                    foreach (string keyword in faq.Keywords)
+                    foreach (var keyword in faq.Keywords)
                     {
-                        double curScore = CalculateScore(keyword, query);
+                        var curScore = CalculateScore(keyword, query);
                         if (curScore < minimumScore)
                         {
                             minimumScore = curScore;
@@ -646,15 +644,15 @@ namespace DiscordBot
             }
         }
 
-        private async void ListFaqs(List<FaqData> faqs)
+        private async void ListFaqs(IReadOnlyCollection<FaqData> faqs)
         {
-            StringBuilder sb = new StringBuilder(faqs.Count);
-            int index = 1;
-            foreach (FaqData faq in faqs)
+            var sb = new StringBuilder(faqs.Count);
+            var index = 1;
+            foreach (var faq in faqs)
             {
                 sb.Append(FormatFaq(index, faq) + "\n");
-                string keywords = "[";
-                for (int i = 0; i < faq.Keywords.Length; i++)
+                var keywords = "[";
+                for (var i = 0; i < faq.Keywords.Length; i++)
                 {
                     keywords += faq.Keywords[i] + (i < faq.Keywords.Length - 1 ? ", " : "]\n\n");
                 }
@@ -675,15 +673,11 @@ namespace DiscordBot
             return builder.Build();
         }
 
-        private string FormatFaq(int id, FaqData faq)
-        {
-            return $"{id}. **{faq.Question}** - {faq.Answer}";
-        }
+        private string FormatFaq(int id, FaqData faq) => $"{id}. **{faq.Question}** - {faq.Answer}";
 
         private int ParseNumber(string s)
         {
-            int id;
-            if (int.TryParse(s, out id))
+            if (int.TryParse(s, out var id))
             {
                 return id;
             }
@@ -698,10 +692,7 @@ namespace DiscordBot
         {
             private readonly LoggingService _logging;
 
-            public RoleModule(LoggingService logging)
-            {
-                _logging = logging;
-            }
+            public RoleModule(LoggingService logging) => _logging = logging;
 
             [Command("add"), Summary("Add a role to yourself. Syntax : !role add role")]
             private async Task AddRoleUser(IRole role)
@@ -791,10 +782,7 @@ namespace DiscordBot
         {
             private readonly AnimeService _animeService;
 
-            public AnimeModule(AnimeService animeService)
-            {
-                _animeService = animeService;
-            }
+            public AnimeModule(AnimeService animeService) => _animeService = animeService;
 
             [Command("search"), Summary("Returns an anime. Syntax : !anime search animeTitle")]
             private async Task SearchAnime(string title)
