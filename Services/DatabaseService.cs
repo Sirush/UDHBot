@@ -1,24 +1,20 @@
-﻿using System.Xml.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using MySql.Data.MySqlClient;
 
-namespace DiscordBot
+namespace DiscordBot.Services
 {
     public class DatabaseService
     {
-        private string _connection { get; }
+        private string Connection { get; }
 
         private readonly LoggingService _logging;
 
         public DatabaseService(LoggingService logging)
         {
-            _connection = SettingsHandler.LoadValueString("dbConnectionString", JsonFile.Settings);
+            Connection = SettingsHandler.LoadValueString("dbConnectionString", JsonFile.Settings);
             _logging = logging;
         }
 
@@ -27,7 +23,7 @@ namespace DiscordBot
         */
         public uint GetPublisherAdCount()
         {
-            using (var connection = new MySqlConnection(_connection))
+            using (var connection = new MySqlConnection(Connection))
             {
                 var command = new MySqlCommand("SELECT COUNT(*) FROM advertisment", connection);
                 connection.Open();
@@ -37,7 +33,7 @@ namespace DiscordBot
 
         public (uint pkgId, ulong userId) GetPublisherAd(uint id)
         {
-            using (var connection = new MySqlConnection(_connection))
+            using (var connection = new MySqlConnection(Connection))
             {
                 var command = new MySqlCommand($"Select username, userid, packageID FROM advertisment WHERE id='{id}'", connection);
                 connection.Open();
@@ -54,22 +50,21 @@ namespace DiscordBot
             return (0, 0);
         }
 
-        public void AddPublisherPackage(string username, string discriminator, string userid, uint packageID)
+        public void AddPublisherPackage(string username, string discriminator, string userid, uint packageId)
         {
             try
             {
-                using (var connection = new MySqlConnection(_connection))
+                using (var connection = new MySqlConnection(Connection))
                 {
                     var command = new MySqlCommand(
-                        $"INSERT INTO advertisment SET username='{username}', discriminator='{discriminator}', userid='{userid}', packageID='{packageID}', date='{DateTime.Now:yyyy-MM-dd HH:mm:ss}'",
+                        $"INSERT INTO advertisment SET username='{username}', discriminator='{discriminator}', userid='{userid}', packageID='{packageId}', date='{DateTime.Now:yyyy-MM-dd HH:mm:ss}'",
                         connection);
                     connection.Open();
                     command.ExecuteNonQuery();
                 }
             }
-            catch (Exception e)
-            {
-                _logging.LogAction($"Error when trying to add package {packageID} from {username}#{discriminator} - {userid} : {e}");
+            catch (Exception e) {
+                _logging?.LogAction($"Error when trying to add package {packageId} from {username}#{discriminator} - {userid} : {e}");
             }
         }
 
@@ -80,7 +75,7 @@ namespace DiscordBot
         {
             try
             {
-                using (var connection = new MySqlConnection(_connection))
+                using (var connection = new MySqlConnection(Connection))
                 {
                     var command = new MySqlCommand(
                         "SET @prev_value = NULL; SET @rank_count = 0; " +
@@ -90,84 +85,73 @@ namespace DiscordBot
                     command.ExecuteNonQuery();
                 }
             }
-            catch (Exception e)
-            {
-                _logging.LogAction($"Error when trying to update ranks : {e}", true, false);
+            catch (Exception e) {
+                _logging?.LogAction($"Error when trying to update ranks : {e}", true, false);
             }
         }
 
 
         public void AddUserXp(ulong id, int xp)
         {
-            int oldXp;
-            string reader = GetAttributeFromUser(id, "exp");
+            var reader = GetAttributeFromUser(id, "exp");
 
-            oldXp = Convert.ToInt32(reader);
+            var oldXp = Convert.ToInt32(reader);
             UpdateAttributeFromUser(id, "exp", oldXp + xp);
         }
 
         public void AddUserLevel(ulong id, uint level)
         {
-            uint oldLevel;
-            string reader = GetAttributeFromUser(id, "level");
+            var reader = GetAttributeFromUser(id, "level");
 
-            oldLevel = Convert.ToUInt32(reader);
+            var oldLevel = Convert.ToUInt32(reader);
             UpdateAttributeFromUser(id, "level", oldLevel + level);
         }
 
         public void AddUserKarma(ulong id, int karma)
         {
-            int oldKarma;
-            string reader = GetAttributeFromUser(id, "karma");
+            var reader = GetAttributeFromUser(id, "karma");
 
-            oldKarma = Convert.ToInt32(reader);
+            var oldKarma = Convert.ToInt32(reader);
             UpdateAttributeFromUser(id, "karma", oldKarma + karma);
         }
 
         public uint GetUserXp(ulong id)
         {
-            uint xp;
-            string reader = GetAttributeFromUser(id, "exp");
+            var reader = GetAttributeFromUser(id, "exp");
 
-            xp = Convert.ToUInt32(reader);
+            var xp = Convert.ToUInt32(reader);
 
             return xp;
         }
 
         public int GetUserKarma(ulong id)
         {
-            int karma;
-            string reader = GetAttributeFromUser(id, "karma");
+            var reader = GetAttributeFromUser(id, "karma");
 
-            karma = Convert.ToInt32(reader);
+            var karma = Convert.ToInt32(reader);
 
             return karma;
         }
 
         public uint GetUserRank(ulong id)
         {
-            uint rank;
-            string reader = GetAttributeFromUser(id, "rank");
+            var reader = GetAttributeFromUser(id, "rank");
 
-            rank = Convert.ToUInt32(reader);
+            var rank = Convert.ToUInt32(reader);
 
             return rank;
         }
 
         public uint GetUserLevel(ulong id)
         {
-            uint level;
-            string reader = GetAttributeFromUser(id, "level");
+            var reader = GetAttributeFromUser(id, "level");
 
-            level = Convert.ToUInt32(reader);
+            var level = Convert.ToUInt32(reader);
 
             return level;
         }
 
-        public string GetUserJoinDate(ulong id)
-        {
-            return GetAttributeFromUser(id, "joinDate");
-        }
+        public string GetUserJoinDate(ulong id) => GetAttributeFromUser(id, "joinDate");
 
         public void UpdateUserName(ulong id, string name)
         {
@@ -181,23 +165,19 @@ namespace DiscordBot
 
         public void AddUserUdc(ulong id, int udc)
         {
-            int oldUdc;
-            string reader = GetAttributeFromUser(id, "udc");
+            var reader = GetAttributeFromUser(id, "udc");
 
-            oldUdc = Convert.ToInt32(reader);
+            var oldUdc = Convert.ToInt32(reader);
             UpdateAttributeFromUser(id, "udc", oldUdc + udc);
         }
 
-        public int GetUserUdc(ulong id)
-        {
-            return Convert.ToInt32(GetAttributeFromUser(id, "udc"));
-        }
+        public int GetUserUdc(ulong id) => Convert.ToInt32(GetAttributeFromUser(id, "udc"));
 
         public List<(ulong userId, int level)> GetTopLevel()
         {
-            List<(ulong userId, int level)> users = new List<(ulong userId, int level)>();
+            var users = new List<(ulong userId, int level)>();
 
-            using (var connection = new MySqlConnection(_connection))
+            using (var connection = new MySqlConnection(Connection))
             {
                 var command = new MySqlCommand("SELECT userid, level FROM `users` ORDER BY exp DESC LIMIT 10", connection);
                 connection.Open();
@@ -214,9 +194,9 @@ namespace DiscordBot
 
         public List<(ulong userId, int karma)> GetTopKarma()
         {
-            List<(ulong userId, int karma)> users = new List<(ulong userId, int karma)>();
+            var users = new List<(ulong userId, int karma)>();
 
-            using (var connection = new MySqlConnection(_connection))
+            using (var connection = new MySqlConnection(Connection))
             {
                 var command = new MySqlCommand("SELECT userid, karma FROM `users` ORDER BY karma DESC LIMIT 10", connection);
                 connection.Open();
@@ -232,9 +212,9 @@ namespace DiscordBot
 
         public List<(ulong userId, int udc)> GetTopUdc()
         {
-            List<(ulong userId, int udc)> users = new List<(ulong userId, int udc)>();
+            var users = new List<(ulong userId, int udc)>();
 
-            using (var connection = new MySqlConnection(_connection))
+            using (var connection = new MySqlConnection(Connection))
             {
                 var command = new MySqlCommand("SELECT userid, udc FROM `users` ORDER BY udc DESC LIMIT 10", connection);
                 connection.Open();
@@ -252,7 +232,7 @@ namespace DiscordBot
         {
             try
             {
-                using (var connection = new MySqlConnection(_connection))
+                using (var connection = new MySqlConnection(Connection))
                 {
                     var command = new MySqlCommand(
                         $"INSERT INTO users SET username=@Username, userid='{user.Id}', discriminator='{user.DiscriminatorValue}'," +
@@ -278,7 +258,7 @@ namespace DiscordBot
         {
             try
             {
-                using (var connection = new MySqlConnection(_connection))
+                using (var connection = new MySqlConnection(Connection))
                 {
                     var command = new MySqlCommand($"DELETE FROM users WHERE userid='{id}'", connection);
                     var command2 = new MySqlCommand($"INSERT users_remove SELECT * FROM users WHERE userid='{id}'", connection);
@@ -297,7 +277,7 @@ namespace DiscordBot
         {
             try
             {
-                using (var connection = new MySqlConnection(_connection))
+                using (var connection = new MySqlConnection(Connection))
                 {
                     
                     var command = new MySqlCommand($"UPDATE users SET {attribute}=@Value WHERE userid='{id}'", connection);
@@ -318,7 +298,7 @@ namespace DiscordBot
         {
             try
             {
-                using (var connection = new MySqlConnection(_connection))
+                using (var connection = new MySqlConnection(Connection))
                 {
                     var command = new MySqlCommand($"SELECT * FROM users where userid='{id}'", connection);
                     connection.Open();
@@ -339,7 +319,7 @@ namespace DiscordBot
         {
             try
             {
-                using (var connection = new MySqlConnection(_connection))
+                using (var connection = new MySqlConnection(Connection))
                 {
                     var command = new MySqlCommand($"UPDATE users SET {attribute}=@Value WHERE userid='{id}'", connection);
                     command.Parameters.AddWithValue("@Value", value);
@@ -360,7 +340,7 @@ namespace DiscordBot
             try
             {
                 value = MySqlHelper.EscapeString(value);
-                using (var connection = new MySqlConnection(_connection))
+                using (var connection = new MySqlConnection(Connection))
                 {
                     var command = new MySqlCommand($"UPDATE users SET {attribute}=@Value WHERE userid='{id}'", connection);
                     command.Parameters.AddWithValue("@Value", value);
@@ -380,7 +360,7 @@ namespace DiscordBot
         {
             try
             {
-                using (var connection = new MySqlConnection(_connection))
+                using (var connection = new MySqlConnection(Connection))
                 {
                     var command = new MySqlCommand($"Select {attribute} FROM users WHERE userid='{id}'", connection);
                     connection.Open();
@@ -394,9 +374,8 @@ namespace DiscordBot
                     }
                 }
             }
-            catch (Exception e)
-            {
-                _logging.LogAction($"Error when trying to get attribute {attribute} from user {id} : {e}", true,
+            catch (Exception e) {
+                _logging?.LogAction($"Error when trying to get attribute {attribute} from user {id} : {e}", true,
                     false);
             }
 

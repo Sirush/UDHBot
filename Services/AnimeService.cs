@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using ConsoleApplication;
 using Discord.WebSocket;
+using DiscordBot.Data;
 using DiscordBot.Extensions;
 using Newtonsoft.Json;
 
-namespace DiscordBot
+namespace DiscordBot.Services
 {
     public class AnimeData
     {
@@ -18,8 +18,8 @@ namespace DiscordBot
 
     public class AnimeService
     {
-        private DiscordSocketClient _client;
-        private LoggingService _loggingService;
+        private readonly DiscordSocketClient _client;
+        private readonly LoggingService _loggingService;
 
         public AnimeService(DiscordSocketClient client, LoggingService loggingService)
         {
@@ -35,18 +35,18 @@ namespace DiscordBot
 
             var airingAnimes = await GetAiringAnimes(1);
 
-            string reply = "Yee-oh ! This is 2B with your Daily Anime Schedule !\n Here's what will be airing in the next 24h !\n";
+            var reply = "Yee-oh ! This is 2B with your Daily Anime Schedule !\n Here's what will be airing in the next 24h !\n";
 
             foreach (var anime in airingAnimes.data.Page.airingSchedules)
             {
-                string malUrl = $"https://myanimelist.net/anime/{anime.media.idMal}";
-                TimeSpan timeUntilAiring = TimeSpan.FromSeconds((double) anime.timeUntilAiring);
+                var malUrl = $"https://myanimelist.net/anime/{anime.media.idMal}";
+                var timeUntilAiring = TimeSpan.FromSeconds((double) anime.timeUntilAiring);
                 var secondTitle = anime.media.title.english ?? anime.media.title.native;
-                string daysString = timeUntilAiring.Days > 0 ? timeUntilAiring.Days + "d " : "";
+                var daysString = timeUntilAiring.Days > 0 ? timeUntilAiring.Days + "d " : "";
                 daysString += timeUntilAiring.Hours > 0 ? timeUntilAiring.Hours + "h " : "";
                 daysString += timeUntilAiring.Minutes > 0 ? timeUntilAiring.Minutes + "min" : "";
 
-                string episodeCount = anime.episode + (anime.media.episodes != null ? "/" + anime.media.episodes : "");
+                var episodeCount = anime.episode + (anime.media.episodes != null ? "/" + anime.media.episodes : "");
 
                 reply += $"**{anime.media.title.romaji}** ({secondTitle}) - *Next airing episode* : **{episodeCount}** " +
                          $"in *{daysString}* " + // at *{DateTime.Now + timeUntilAiring}*(UTC+1) " +
@@ -67,24 +67,24 @@ namespace DiscordBot
 
             var channel = _client.GetChannel(Settings.GetAnimeChannel()) as ISocketMessageChannel;
 
-            string reply = "こんにちは! This is 2B with your Weekly Anime Schedule !\n Here's what will be airing in the next 7 days !\n";
+            var reply = "こんにちは! This is 2B with your Weekly Anime Schedule !\n Here's what will be airing in the next 7 days !\n";
 
             try
             {
-                for (int i = 1; i < 10; i++)
+                for (var i = 1; i < 10; i++)
                 {
                     var airingAnimes = await GetAiringAnimes(7, i);
 
                     foreach (var anime in airingAnimes.data.Page.airingSchedules)
                     {
-                        string malUrl = $"https://myanimelist.net/anime/{anime.media.idMal}";
-                        TimeSpan timeUntilAiring = TimeSpan.FromSeconds((double) anime.timeUntilAiring);
+                        var malUrl = $"https://myanimelist.net/anime/{anime.media.idMal}";
+                        var timeUntilAiring = TimeSpan.FromSeconds((double) anime.timeUntilAiring);
                         var secondTitle = anime.media.title.english ?? anime.media.title.native;
-                        string daysString = timeUntilAiring.Days > 0 ? timeUntilAiring.Days + "d " : "";
+                        var daysString = timeUntilAiring.Days > 0 ? timeUntilAiring.Days + "d " : "";
                         daysString += timeUntilAiring.Hours > 0 ? timeUntilAiring.Hours + "h " : "";
                         daysString += timeUntilAiring.Minutes > 0 ? timeUntilAiring.Minutes + "min" : "";
 
-                        string episodeCount = anime.episode + (anime.media.episodes != null ? "/" + anime.media.episodes : "");
+                        var episodeCount = anime.episode + (anime.media.episodes != null ? "/" + anime.media.episodes : "");
 
                         reply += $"**{anime.media.title.romaji}** ({secondTitle}) - *Next airing episode* : **{episodeCount}** " +
                                  $"in *{daysString}* " + // at *{DateTime.Now + timeUntilAiring}*(UTC+1) " +
@@ -145,9 +145,9 @@ namespace DiscordBot
             return response;
         }
 
-        public async Task<AnilistResponse> GetAiringAnimes(int days, int page = 1)
+        private async Task<AnilistResponse> GetAiringAnimes(int days, int page = 1)
         {
-            int timeUntilAiring = 60 * 60 * 24 * days;
+            var timeUntilAiring = 60 * 60 * 24 * days;
 
             var json = @"{
                 Page(page: " + page + @", perPage: 50) {
@@ -187,22 +187,21 @@ namespace DiscordBot
             return response;
         }
 
-        public async Task<AnilistResponse> AnilistRequest(string payload, string variables)
+        private async Task<AnilistResponse> AnilistRequest(string payload, string variables)
         {
-            string uri = "https://graphql.anilist.co";
+            const string uri = "https://graphql.anilist.co";
             var parameters = new Dictionary<string, string>
             {
                 {"query", payload},
                 {"variables", variables}
             };
             var content = new FormUrlEncodedContent(parameters);
-            string response;
             AnilistResponse anilistResponse;
 
             using (HttpClient client = new HttpClient())
             {
                 var request = await client.PostAsync(uri, content);
-                response = await request.Content.ReadAsStringAsync();
+                var response = await request.Content.ReadAsStringAsync();
                 anilistResponse = JsonConvert.DeserializeObject<AnilistResponse>(response,
                     new JsonSerializerSettings
                     {

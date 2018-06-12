@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Discord;
 
-namespace DiscordBot
+namespace DiscordBot.Services
 {
     public class CasinoService
     {
@@ -13,9 +13,9 @@ namespace DiscordBot
         private int _slotMachineCashPool;
         private int _lotteryCashPool;
 
-        private const string UDC = "UDC";
+        private const string Udc = "UDC";
 
-        private Random _random;
+        private readonly Random _random;
 
         public CasinoService(LoggingService logging, UpdateService updateService, DatabaseService databaseService)
         {
@@ -50,7 +50,7 @@ namespace DiscordBot
 
         private void SaveData()
         {
-            CasinoData data = new CasinoData()
+            var data = new CasinoData()
             {
                 LotteryCashPool = _lotteryCashPool,
                 SlotMachineCashPool = _slotMachineCashPool
@@ -58,25 +58,22 @@ namespace DiscordBot
             _updateService.SetCasinoData(data);
         }
 
-        public int GetUserUdc(ulong userId)
-        {
-            return _databaseService.GetUserUdc(userId);
-        }
+        public int GetUserUdc(ulong userId) => _databaseService.GetUserUdc(userId);
 
         public (string imagePath, string reply) PlaySlotMachine(IUser user, int amount)
         {
-            int udc = GetUserUdc(user.Id);
+            var udc = GetUserUdc(user.Id);
 
             if (amount > udc)
-                return (null, $"Sorry {user.Mention}, you only have **{udc}**{UDC}");
+                return (null, $"Sorry {user.Mention}, you only have **{udc}**{Udc}");
 
             if (amount < 100)
-                return (null, $"Sorry {user.Mention}, you must play at least **100**{UDC} at once");
+                return (null, $"Sorry {user.Mention}, you must play at least **100**{Udc} at once");
 
             if (amount > 10000)
-                return (null, $"Sorry {user.Mention}, you can only play **10 000**{UDC} at once.");
+                return (null, $"Sorry {user.Mention}, you can only play **10 000**{Udc} at once.");
 
-            int random = _random.Next(0, 100);
+            var random = _random.Next(0, 100);
 
             _databaseService.AddUserUdc(user.Id, -amount);
             _slotMachineCashPool += amount/2;
@@ -127,7 +124,7 @@ namespace DiscordBot
                 if (Slot(4))
                 {
                     _databaseService.AddUserUdc(user.Id, _slotMachineCashPool);
-                    int won = _slotMachineCashPool;
+                    var won = _slotMachineCashPool;
                     _slotMachineCashPool = 150000;
                     return (Settings.GetServerRootPath() + "/casino/jackpot.png",
                         $"{user.Mention} The machine spinning wildly is like an epic symphony to your ears. Soon, more and more light start to blink all around, and sounds that trigger your reward center. As you see those sexy android girls aligning, an immense joy fills you. You begin to hear cheer and see coins upon coins falling to the ground. You did it, you won the jackpot. Are you gonna try to win even more ? *You won a jackpot of {won}UDC*");
@@ -138,14 +135,8 @@ namespace DiscordBot
             }
         }
 
-        private bool Slot(int chance)
-        {
-            return _random.Next(0, 100) <= chance;
-        }
+        private bool Slot(int chance) => _random.Next(0, 100) <= chance;
 
-        public string SlotCashPool()
-        {
-            return $"The Slot Machine Jackpot is **{_slotMachineCashPool}**UDC";
-        }
+        public string SlotCashPool() => $"The Slot Machine Jackpot is **{_slotMachineCashPool}**UDC";
     }
 }

@@ -12,12 +12,12 @@ namespace DiscordBot.Extensions
             return value.Length <= maxLength ? value : value.Substring(0, maxLength);
         }
 
-        public static List<string> MessageSplit(this string str, int maxLength = 1990)
+        public static IEnumerable<string> MessageSplit(this string str, int maxLength = 1990)
         {
-            List<string> list = str.Split('\n').ToList();
-            List<string> ret = new List<string>();
+            var list = str.Split('\n').ToList();
+            var ret = new List<string>();
 
-            string currentString = "";
+            var currentString = "";
             foreach (var s in list)
             {
                 if (currentString.Length + s.Length < maxLength)
@@ -31,7 +31,7 @@ namespace DiscordBot.Extensions
                 }
             }
 
-            if (!String.IsNullOrEmpty(currentString))
+            if (!string.IsNullOrEmpty(currentString))
                 ret.Add(currentString);
 
             return ret;
@@ -42,10 +42,7 @@ namespace DiscordBot.Extensions
         /// </summary>
         /// <param name="content"></param>
         /// <returns></returns>
-        public static string EscapeDiscordMarkup(this string content)
-        {
-            return System.Text.RegularExpressions.Regex.Replace(content, @"([\\~\\_\`\*\`])", "\\$1");
-        }
+        public static string EscapeDiscordMarkup(this string content) => System.Text.RegularExpressions.Regex.Replace(content, @"([\\~\\_\`\*\`])", "\\$1");
 
         public static int CalculateLevenshteinDistance(this string source1, string source2) //O(n*m)
         {
