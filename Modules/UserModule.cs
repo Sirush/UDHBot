@@ -839,7 +839,7 @@ namespace DiscordBot.Modules
                     return;
                 }
 
-                if (!Settings.IsRoleAssignable(role))
+                if (!Settings.IsRoleUserAssignable(role))
                 {
                     await ReplyAsync("This role is not assigneable");
                     return;
@@ -863,7 +863,7 @@ namespace DiscordBot.Modules
                     return;
                 }
 
-                if (!Settings.IsRoleAssignable(role))
+                if (!Settings.IsRoleUserAssignable(role))
                 {
                     await ReplyAsync("Role is not assigneable");
                     return;
