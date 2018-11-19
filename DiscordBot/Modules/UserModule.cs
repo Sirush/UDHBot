@@ -218,6 +218,15 @@ namespace DiscordBot.Modules
             await ReplyAsync($"{Context.User.Mention} you joined **{joinDate:dddd dd/MM/yyy HH:mm:ss}**");
             await Context.Message.DeleteAsync();
         }
+        
+        [Command("joindate"), Summary("Display join date of mentioned user. Syntax : !joindate @user")]
+        private async Task JoinDate(IUser user)
+        {
+            var userId = user.Id;
+            DateTime.TryParse(_databaseService.GetUserJoinDate(userId), out DateTime joinDate);
+            await ReplyAsync($"{Context.User.Mention} you joined **{joinDate:dddd dd/MM/yyy HH:mm:ss}**");
+            await Context.Message.DeleteAsync();
+        }
 
         #endregion
 
