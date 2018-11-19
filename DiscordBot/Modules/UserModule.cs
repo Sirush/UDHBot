@@ -209,19 +209,11 @@ namespace DiscordBot.Modules
             await Task.Delay(TimeSpan.FromMinutes(3d));
             await profile.DeleteAsync();
         }
-
-        [Command("joindate"), Summary("Display your join date. Syntax : !joindate")]
-        private async Task JoinDate()
-        {
-            var userId = Context.User.Id;
-            DateTime.TryParse(_databaseService.GetUserJoinDate(userId), out DateTime joinDate);
-            await ReplyAsync($"{Context.User.Mention} you joined **{joinDate:dddd dd/MM/yyy HH:mm:ss}**");
-            await Context.Message.DeleteAsync();
-        }
         
-        [Command("joindate"), Summary("Display join date of mentioned user. Syntax : !joindate @user")]
+        [Command("joindate"), Summary("Display your join date or join date of mentioned user. Syntax : !joindate @user")]
         private async Task JoinDate(IUser user)
         {
+            user = user ?? Context.User;
             var userId = user.Id;
             DateTime.TryParse(_databaseService.GetUserJoinDate(userId), out DateTime joinDate);
             await ReplyAsync($"{Context.User.Mention} you joined **{joinDate:dddd dd/MM/yyy HH:mm:ss}**");
