@@ -211,7 +211,7 @@ namespace DiscordBot.Modules
         }
         
         [Command("joindate"), Summary("Display your join date or join date of mentioned user. Syntax : !joindate @user")]
-        private async Task JoinDate(IUser user)
+        private async Task JoinDate(IUser user = null)
         {
             user = user ?? Context.User;
             var userId = user.Id;
