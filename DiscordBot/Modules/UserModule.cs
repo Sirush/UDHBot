@@ -845,16 +845,40 @@ namespace DiscordBot.Modules
 
         #region temperatures
 
-        [Command("ftoc"), Summary("Converts a temperature in fahrenheit to celsius. Syntax : !ftoc temperature")]
+        [Command("ftoc"), Summary("Converts a temperature in Fahrenheit to Celsius. Syntax : !ftoc temperature")]
         private async Task FahrenheitToCelsius(float f)
         {
             await ReplyAsync($"{Context.User.Mention} {f}°F is {Math.Round((f - 32) * 0.555555f, 2)}°C.");
         }
 
-        [Command("ctof"), Summary("Converts a temperature in celsius to fahrenheit. Syntax : !ftoc temperature")]
+        [Command("ftok"), Summary("Converts a temperature in Fahrenheit to Kelvin. Syntax : !ftok temperature")]
+        private async Task FahrenheitToKelvin(float f) 
+        {
+            await ReplyAsync($"{Context.User.Mention} {f}°F is {Math.Round((f - 32) * 5 / 9 + 273.15, 2)}°K.");
+        }                                                     
+
+        [Command("ctof"), Summary("Converts a temperature in Celsius to Fahrenheit. Syntax : !ctof temperature")]
         private async Task CelsiusToFahrenheit(float c)
         {
             await ReplyAsync($"{Context.User.Mention}  {c}°C is {Math.Round(c * 1.8f + 32, 2)}°F");
+        }
+
+        [Command("ctok"), Summary("Converts a temperature in Celsius to Kelvin. Syntax : !ctok temperature")]
+        private async Task CelsiusToFahrenheit(float c)
+        {
+            await ReplyAsync($"{Context.User.Mention}  {c}°C is {Math.Round(c + 273.15, 2)}°K");
+        }
+
+        [Command("ktof"), Summary("Converts a temperature in Kelvin to Fahrenheit. Syntax : !ktof temperature")]
+        private async Task CelsiusToFahrenheit(float k)
+        {
+            await ReplyAsync($"{Context.User.Mention}  {k}°K is {Math.Round((k - 273.15) * 9/5 + 32 , 2)}°F");
+        }
+
+        [Command("ktoc"), Summary("Converts a temperature in Kelvin to Celsius. Syntax : !ktoc temperature")]
+        private async Task CelsiusToFahrenheit(float k)
+        {
+            await ReplyAsync($"{Context.User.Mention}  {k}°K is {Math.Round(c - 273.15, 2)}°C");
         }
 
         #endregion
