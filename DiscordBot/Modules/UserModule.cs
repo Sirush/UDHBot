@@ -903,7 +903,7 @@ namespace DiscordBot.Modules
             }
 
             // Convert fromCurrency amount to USD to toCurrency
-            double value = Math.Round((toRate / fromRate) * amount, 2);
+            double value = Math.Round((toRate / fromRate) * amount, 10);
 
             await ReplyAsync($"{Context.User.Mention}  **{amount} {from}** = **{value} {to}**");
         }
