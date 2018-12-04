@@ -40,6 +40,7 @@ namespace DiscordBot
         private static Rules _rules;
         private static Settings.Deserialized.Settings _settings;
         private static UserSettings _userSettings;
+        private static Achievements _achievements;
 
         public static void Main(string[] args) =>
             new Program().MainAsync().GetAwaiter().GetResult();
@@ -56,7 +57,7 @@ namespace DiscordBot
             _commandService =
                 new CommandService(new CommandServiceConfig {CaseSensitiveCommands = false, DefaultRunMode = RunMode.Async});
             _loggingService = new LoggingService(_client, _settings);
-            _databaseService = new DatabaseService(_loggingService, _settings);
+            _databaseService = new DatabaseService(_loggingService, _settings, _achievements);
             _publisherService = new PublisherService(_client, _databaseService, _settings);
             _animeService = new AnimeService(_client, _loggingService, _settings);
             _feedService = new FeedService(_client, _settings);
@@ -82,6 +83,7 @@ namespace DiscordBot
             _serviceCollection.AddSingleton(_rules);
             _serviceCollection.AddSingleton(_payWork);
             _serviceCollection.AddSingleton(_userSettings);
+            _serviceCollection.AddSingleton(_achievements);
             _serviceCollection.AddSingleton(_currencyService);
             _services = _serviceCollection.BuildServiceProvider();
 
@@ -314,6 +316,17 @@ namespace DiscordBot
             using (var file = File.OpenText(@"Settings/UserSettings.json"))
             {
                 _userSettings = JsonConvert.DeserializeObject<UserSettings>(file.ReadToEnd());
+            }
+
+            using (var file = File.OpenText(@"Settings/Achievements.json"))
+            {
+                try {
+                    _achievements = JsonConvert.DeserializeObject<Achievements>(file.ReadToEnd());
+                    Console.WriteLine("NO ERRAH");
+                }
+                catch (Exception e) {
+                    Console.WriteLine("ERRAH: " + e.Message);
+                }
             }
         }
     }

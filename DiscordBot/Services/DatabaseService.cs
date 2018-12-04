@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord.WebSocket;
+using DiscordBot.Domain;
+using DiscordBot.Settings.Deserialized;
 using MySql.Data.MySqlClient;
 
 namespace DiscordBot.Services
@@ -13,12 +16,14 @@ namespace DiscordBot.Services
         private readonly ILoggingService _logging;
 
         private readonly Settings.Deserialized.Settings _settings;
+        private readonly Achievements _achievements;
 
-        public DatabaseService(ILoggingService logging, Settings.Deserialized.Settings settings)
+        public DatabaseService(ILoggingService logging, Settings.Deserialized.Settings settings, Achievements achievements)
         {
             _settings = settings;
             _connection = _settings.DbConnectionString;
             _logging = logging;
+            _achievements = achievements;
         }
 
         /*
@@ -213,6 +218,70 @@ namespace DiscordBot.Services
 
             return 0;
         }
+        
+        public Achievement[] GetUserAchievements(ulong id) {
+            List<string> achievementIds = new List<string>();
+           
+            
+            using (var connection = new MySqlConnection(_connection))
+            {
+                var command = new MySqlCommand(
+                    $"SELECT achievement_id FROM achievements WHERE user_id='{id}';", connection);
+                connection.Open();
+
+                MySqlDataReader reader;
+                using (reader = command.ExecuteReader()) {
+                    
+                    while (reader.Read())
+                    {
+                        achievementIds.Add((string) reader["achievement_id"]);
+                    }
+                }
+            }
+            
+            Achievement[] achievements = new Achievement[achievementIds.Count];
+
+            //Convert achievement id's into achievement objects
+            for (int i = 0; i < achievementIds.Count; i++) {
+                //Loop through achievements to find matching id
+                foreach (var achievement in _achievements.Achievement) {
+                    if (achievementIds[i] == achievement.id) {
+                        achievements[i] = achievement;
+                        break;
+                    }
+                }
+            }
+
+            return achievements;
+        }
+        
+        public async void AddUserAchievement(Achievement achievement, ulong id) 
+        {
+            try
+            {
+                using (var connection = new MySqlConnection(_connection))
+                {
+                    try {
+                        var command =
+                            new MySqlCommand(
+                                $"INSERT INTO achievements (user_id, achievement_id) VALUES ('{id}', '{achievement.id}');",
+                                connection);
+                        connection.Open();
+                        command.ExecuteNonQuery();
+                    }
+                    catch (Exception e) {
+                        String boi = $"INSERT INTO achievements (user_id, achievement_id) VALUES ('{id}', '{achievement.id}');";
+                        Console.WriteLine(e.Message + " QUERY: " + boi);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                await _logging.LogAction($"Error when trying to insert user " + id + "'s achievement, " + achievement.name,
+                    true,
+                    false);
+            }
+        }
 
         public List<(ulong userId, int level)> GetTopLevel()
         {
@@ -284,7 +353,7 @@ namespace DiscordBot.Services
                     command.Parameters.AddWithValue("@Status", user.Status);
                     connection.Open();
                     command.ExecuteNonQuery();
-                    await _logging.LogAction($"User {user.Username}#{user.DiscriminatorValue} succesfully added to the databse.",
+                    await _logging.LogAction($"User {user.Username}#{user.DiscriminatorValue} successfully added to the database.",
                         true,
                         false);
                 }
