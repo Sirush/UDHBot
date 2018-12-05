@@ -261,18 +261,13 @@ namespace DiscordBot.Services
             {
                 using (var connection = new MySqlConnection(_connection))
                 {
-                    try {
-                        var command =
-                            new MySqlCommand(
-                                $"INSERT INTO achievements (user_id, achievement_id) VALUES ('{id}', '{achievement.id}');",
+                    var command =
+                        new MySqlCommand(
+                            $"INSERT IGNORE INTO achievements (user_id, achievement_id) VALUES ('{id}', '{achievement.id}');",
                                 connection);
-                        connection.Open();
-                        command.ExecuteNonQuery();
-                    }
-                    catch (Exception e) {
-                        String boi = $"INSERT INTO achievements (user_id, achievement_id) VALUES ('{id}', '{achievement.id}');";
-                        Console.WriteLine(e.Message + " QUERY: " + boi);
-                    }
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    
                 }
             }
             catch (Exception e)
@@ -281,6 +276,9 @@ namespace DiscordBot.Services
                     true,
                     false);
             }
+            
+            //Add reward XP
+            AddUserXp(id, achievement.xp);
         }
 
         public List<(ulong userId, int level)> GetTopLevel()

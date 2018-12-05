@@ -35,6 +35,7 @@ namespace DiscordBot
         private CasinoService _casinoService;
         private FeedService _feedService;
         private CurrencyService _currencyService;
+        private AchievementService _achievementService;
 
         private static PayWork _payWork;
         private static Rules _rules;
@@ -68,6 +69,7 @@ namespace DiscordBot
             _audioService = new AudioService(_loggingService, _client, _settings);
             _casinoService = new CasinoService(_loggingService, _updateService, _databaseService, _settings);
             _currencyService = new CurrencyService();
+            _achievementService = new AchievementService(_databaseService);
             _serviceCollection = new ServiceCollection();
             _serviceCollection.AddSingleton(_loggingService);
             _serviceCollection.AddSingleton(_databaseService);
@@ -79,6 +81,7 @@ namespace DiscordBot
             _serviceCollection.AddSingleton(_audioService);
             _serviceCollection.AddSingleton(_animeService);
             _serviceCollection.AddSingleton(_casinoService);
+            _serviceCollection.AddSingleton(_achievementService);
             _serviceCollection.AddSingleton(_settings);
             _serviceCollection.AddSingleton(_rules);
             _serviceCollection.AddSingleton(_payWork);
@@ -139,6 +142,7 @@ namespace DiscordBot
             _client.MessageReceived += HandleCommand;
             _client.MessageReceived += _userService.UpdateXp;
             _client.MessageReceived += _userService.Thanks;
+            _client.MessageReceived += _achievementService.Test;
             _client.MessageUpdated += _userService.ThanksEdited;
             _client.MessageReceived += _userService.CodeCheck;
             _client.MessageReceived += _userService.ScoldForAtEveryoneUsage;
@@ -320,13 +324,7 @@ namespace DiscordBot
 
             using (var file = File.OpenText(@"Settings/Achievements.json"))
             {
-                try {
-                    _achievements = JsonConvert.DeserializeObject<Achievements>(file.ReadToEnd());
-                    Console.WriteLine("NO ERRAH");
-                }
-                catch (Exception e) {
-                    Console.WriteLine("ERRAH: " + e.Message);
-                }
+                _achievements = JsonConvert.DeserializeObject<Achievements>(file.ReadToEnd());
             }
         }
     }

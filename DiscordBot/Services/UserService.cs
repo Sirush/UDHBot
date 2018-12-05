@@ -22,6 +22,7 @@ namespace DiscordBot.Services
         private readonly DatabaseService _databaseService;
         private readonly ILoggingService _loggingService;
         private readonly UpdateService _updateService;
+        private readonly AchievementService _achievementService;
 
         private readonly Settings.Deserialized.Settings _settings;
         private readonly UserSettings _userSettings;
@@ -230,6 +231,8 @@ namespace DiscordBot.Services
             // instead should be `ContinueWith(async _ => await message.DeleteAsync())`
             //await Task.Delay(TimeSpan.FromSeconds(60d)).ContinueWith(async _ => await message.DeleteAsync()).Unwrap();
             //TODO: Add level up card
+            
+            _achievementService.OnLevelUp(messageParam, level);
         }
 
         private double GetXpLow(int level)
@@ -287,6 +290,7 @@ namespace DiscordBot.Services
             using (MagickImageCollection profileCard = new MagickImageCollection())
             {
                 SkinData skin = GetSkinData();
+                
                 ProfileData profile = new ProfileData
                 {
                     Karma = karma,
@@ -456,6 +460,9 @@ namespace DiscordBot.Services
                     _databaseService.AddUserKarma(user.Id, 1);
                     _databaseService.AddUserUdc(user.Id, 350);
                     sb.Append(user.Username).Append(" , ");
+                    
+                    //Notify achievements
+                    _achievementService.OnGainKarma(messageParam);
                 }
 
                 sb.Length -= 2; //Removes last instance of appended comma without convoluted tracking

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using DiscordBot.Extensions;
 using DiscordBot.Services;
 using DiscordBot.Settings.Deserialized;
@@ -14,24 +15,32 @@ namespace DiscordBot.Modules
         private Settings.Deserialized.Settings _settings;
         private readonly DatabaseService _databaseService;
         private readonly Achievements _achievements;
+        private readonly AchievementService _achievementService;
+        
+        
 
-        public AchievementModule (Settings.Deserialized.Settings settings, DatabaseService databaseService, Achievements achievements) {
+        public AchievementModule (Settings.Deserialized.Settings settings, DatabaseService databaseService, AchievementService achievementService, Achievements achievements) {
             _settings = settings;
             _databaseService = databaseService;
             _achievements = achievements;
+            _achievementService = achievementService;
+            
+            achievementService.LoadAchievements(_achievements.Achievement.ToArray());
         }
         
         [Command("Achievements"), Alias("ach", "achievement"), Summary("Lists your achievements")]
         private async Task ShowAchievements() {
             Achievement[] achievements = _databaseService.GetUserAchievements(Context.Message.Author.Id);
 
-            String message = "You have the following achievements. ```";
+            EmbedBuilder embedBuilder = new EmbedBuilder();
+            embedBuilder.Title = $"{Context.User.Username}'s achievements";
+
+            
             foreach (Achievement ach in achievements) {
-                message += ach.description + '\n';
+                embedBuilder.AddField("- " + ach.name, ach.description, true);
             }
 
-            message += "```";
-            await ReplyAsync(message);
+            await Context.Channel.SendMessageAsync("", false, embedBuilder.Build()).DeleteAfterTime(minutes: 10);
         }
         
         [Command("GiveAchievement"), Alias("giveach"), Summary("Gives user an achievement")]
@@ -56,7 +65,8 @@ namespace DiscordBot.Modules
             _databaseService.AddUserAchievement(ach, user.Id);
             
             await ReplyAsync("Added achievement");
+
+            _achievementService.ShowEarnedAchievement(user.Username, ach, Context.Channel);
         }
-        
     }
 }
