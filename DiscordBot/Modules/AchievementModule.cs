@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -8,19 +8,16 @@ using DiscordBot.Extensions;
 using DiscordBot.Services;
 using DiscordBot.Settings.Deserialized;
 
-// ReSharper disable all UnusedMember.Local
 namespace DiscordBot.Modules
 {
     public class AchievementModule : ModuleBase {
-        private Settings.Deserialized.Settings _settings;
         private readonly DatabaseService _databaseService;
         private readonly Achievements _achievements;
         private readonly AchievementService _achievementService;
         
         
 
-        public AchievementModule (Settings.Deserialized.Settings settings, DatabaseService databaseService, AchievementService achievementService, Achievements achievements) {
-            _settings = settings;
+        public AchievementModule (DatabaseService databaseService, AchievementService achievementService, Achievements achievements) {
             _databaseService = databaseService;
             _achievements = achievements;
             _achievementService = achievementService;
@@ -32,10 +29,8 @@ namespace DiscordBot.Modules
         private async Task ShowAchievements() {
             Achievement[] achievements = _databaseService.GetUserAchievements(Context.Message.Author.Id);
 
-            EmbedBuilder embedBuilder = new EmbedBuilder();
-            embedBuilder.Title = $"{Context.User.Username}'s achievements";
+            EmbedBuilder embedBuilder = new EmbedBuilder {Title = $"{Context.User.Username}'s achievements"};
 
-            
             foreach (Achievement ach in achievements) {
                 String description = ach.description;
                 if (ach.background != null) {
@@ -58,13 +53,18 @@ namespace DiscordBot.Modules
             
             //Loop through achievements to find matching id
             foreach (var achievement in _achievements.Achievement) {
-                if (achId.ToLower() == achievement.id.ToLower()) {
+                if (String.Equals(achId, achievement.id, StringComparison.CurrentCultureIgnoreCase)) {
                     ach = achievement;
                 }
             }
 
             if (ach == null) {
                 await ReplyAsync("Could not find achievement ID").DeleteAfterSeconds(10);
+                return;
+            }
+
+            if (achievements.Contains(ach)) {
+                await ReplyAsync("User already has achievement").DeleteAfterSeconds(10);
                 return;
             }
             

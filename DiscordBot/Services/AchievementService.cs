@@ -12,9 +12,8 @@ namespace DiscordBot.Services {
     public class AchievementService {
         private readonly DatabaseService _databaseService;
         
-        private Achievement[] xpAchievements;
-        private Achievement[] karmaAchievements;
-        private Achievement[] rankAchievements;
+        private Achievement[] _xpAchievements;
+        private Achievement[] _karmaAchievements;
 
         public AchievementService(DatabaseService databaseService) {
             _databaseService = databaseService;
@@ -34,9 +33,8 @@ namespace DiscordBot.Services {
 
         //Sort the achievements into category's so it does not need to loop over every achievement when a user speaks
         public void LoadAchievements(Achievement[] achievements) {
-            xpAchievements = GetAchievementsWithRequirement(achievements, "Level");
-            karmaAchievements = GetAchievementsWithRequirement(achievements, "KarmaGained");
-            rankAchievements = GetAchievementsWithRequirement(achievements, "KarmaGained");
+            _xpAchievements = GetAchievementsWithRequirement(achievements, "Level");
+            _karmaAchievements = GetAchievementsWithRequirement(achievements, "KarmaGained");
         }
         
         public void ShowEarnedAchievement(String username, Achievement achievement, IMessageChannel channel) {
@@ -50,7 +48,7 @@ namespace DiscordBot.Services {
         public void OnLevelUp(SocketMessage message, int level) {
             Achievement[] userAchievements = _databaseService.GetUserAchievements(message.Author.Id);
             
-            foreach (Achievement achievement in xpAchievements) {
+            foreach (Achievement achievement in _xpAchievements) {
                 if (level >= Int64.Parse(achievement.value)) {
                     //Make sure they don't already have it
                     if (!userAchievements.Contains(achievement)) {
@@ -69,7 +67,7 @@ namespace DiscordBot.Services {
 
             int karma = _databaseService.GetUserKarma(user.Id);
             
-            foreach (Achievement achievement in karmaAchievements) {
+            foreach (Achievement achievement in _karmaAchievements) {
                 if (karma >= Int64.Parse(achievement.value)) {
                     //Make sure they don't already have it
                     if (!userAchievements.Contains(achievement)) {
@@ -84,7 +82,7 @@ namespace DiscordBot.Services {
         private void CheckUserRank(SocketMessage message, Achievement[] userAchievements) {
             uint rank = _databaseService.GetUserRank(message.Author.Id);
             
-            foreach (Achievement achievement in xpAchievements) {
+            foreach (Achievement achievement in _xpAchievements) {
                 if (rank <= Int64.Parse(achievement.value)) {
                     //Make sure they dont already have it
                     if (!userAchievements.Contains(achievement)) {
