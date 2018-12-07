@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
@@ -83,7 +83,7 @@ namespace DiscordBot.Modules
             Achievement ach = null;
             
             //Loop through achievements to find matching id
-            foreach (var achievement in _achievements.Achievement) {
+            foreach (var achievement in achievements) {
                 if (background.ToLower() == achievement.id.ToLower()) {
                     ach = achievement;
                 }
