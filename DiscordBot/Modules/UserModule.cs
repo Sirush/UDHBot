@@ -131,31 +131,6 @@ namespace DiscordBot.Modules
         #endregion
 
         #region XP & Karma
-        
-        
-        [Command("ChristmasCompleted"), Summary("Gives rewards to people who complete the christmas event.")]
-        private async Task UserCompleted(String message)
-        {
-            
-            //Make sure they're the santa bot
-            if (Context.Message.Author.Id != 514979161144557600L) {
-                return;
-            }
-                
-            long userId = 0;
-
-            if (!long.TryParse(message, out userId)) {
-                await ReplyAsync("Invalid user id");
-                return;
-            }
-            
-            int xpGain = 5000;
-            
-            _databaseService.AddUserXp((ulong)userId, xpGain);
-            
-            await Context.Message.DeleteAsync();
-            await ReplyAsync("Success");
-        }
 
         [Command("karma"), Summary("Display description of what Karma is for. Syntax : !karma")]
         private async Task KarmaDescription(int seconds = 60)
