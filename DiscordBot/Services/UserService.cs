@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -61,11 +61,12 @@ namespace DiscordBot.Services
 
         //TODO: Add custom commands for user after (30karma ?/limited to 3 ?)
 
-        public UserService(DatabaseService databaseService, ILoggingService loggingService, UpdateService updateService,
+        public UserService(DatabaseService databaseService, AchievementService achievementService, ILoggingService loggingService, UpdateService updateService,
             Settings.Deserialized.Settings settings, UserSettings userSettings)
         {
             rand = new Random();
             _databaseService = databaseService;
+            _achievementService = achievementService;
             _loggingService = loggingService;
             _updateService = updateService;
             _settings = settings;
@@ -291,7 +292,7 @@ namespace DiscordBot.Services
             {
                 SkinData skin = GetSkinData();
                 
-                ProfileData profile = new ProfileData
+                skin.Background = _databaseService.GetUserBackground(user.Id);
                 {
                     Karma = karma,
                     KarmaRank = karmaRank,
@@ -462,7 +463,7 @@ namespace DiscordBot.Services
                     sb.Append(user.Username).Append(" , ");
                     
                     //Notify achievements
-                    _achievementService.OnGainKarma(messageParam);
+                    _achievementService.OnGainKarma(user, messageParam);
                 }
 
                 sb.Length -= 2; //Removes last instance of appended comma without convoluted tracking
@@ -482,11 +483,11 @@ namespace DiscordBot.Services
 
                 _canEditThanks.Remove(messageParam.Id);
 
-//Don't give karma cooldown if user only mentioned himself or the bot or both
+                //Don't give karma cooldown if user only mentioned himself or the bot or both
                 if (((mentionedSelf || mentionedBot) && mentions.Count == 1) || (mentionedBot && mentionedSelf && mentions.Count == 2))
                     return;
                 _thanksCooldown.AddCooldown(userId, _thanksCooldownTime);
-//Add thanks reminder cooldown after thanking to avoid casual thanks triggering remind afterwards
+                //Add thanks reminder cooldown after thanking to avoid casual thanks triggering remind afterwards
                 ThanksReminderCooldown.AddCooldown(userId, _thanksReminderCooldownTime);
                 await messageParam.Channel.SendMessageAsync(sb.ToString());
                 await _loggingService.LogAction(sb + " in channel " + messageParam.Channel.Name);

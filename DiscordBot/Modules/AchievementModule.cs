@@ -37,7 +37,13 @@ namespace DiscordBot.Modules
 
             
             foreach (Achievement ach in achievements) {
-                embedBuilder.AddField("- " + ach.name, ach.description, true);
+                String description = ach.description;
+                if (ach.background != null) {
+                    //It has a background, show the id so they can switch to background
+                    description += " [" + ach.id + "]";
+                }
+                
+                embedBuilder.AddField("- " + ach.name, description, true);
             }
 
             await Context.Channel.SendMessageAsync("", false, embedBuilder.Build()).DeleteAfterTime(minutes: 10);
@@ -58,15 +64,39 @@ namespace DiscordBot.Modules
             }
 
             if (ach == null) {
-                await ReplyAsync("Could not find achievement ID");
+                await ReplyAsync("Could not find achievement ID").DeleteAfterSeconds(10);
                 return;
             }
             
             _databaseService.AddUserAchievement(ach, user.Id);
             
-            await ReplyAsync("Added achievement");
+            await ReplyAsync("Added achievement").DeleteAfterSeconds(10);
 
             _achievementService.ShowEarnedAchievement(user.Username, ach, Context.Channel);
+        }
+        
+        [Command("SetBackground"), Alias("background"), Summary("Sets your profile background")]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        private async Task SetProfileBackground(String background) {
+            Achievement[] achievements = _databaseService.GetUserAchievements(Context.Message.Author.Id);
+
+            Achievement ach = null;
+            
+            //Loop through achievements to find matching id
+            foreach (var achievement in _achievements.Achievement) {
+                if (background.ToLower() == achievement.id.ToLower()) {
+                    ach = achievement;
+                }
+            }
+
+            if (ach == null) {
+                await ReplyAsync("Could not find achievement").DeleteAfterSeconds(10);
+                return;
+            }
+            
+            _databaseService.SetUserBackground(Context.User.Id, ach.background.url);
+            
+            await ReplyAsync("Switched backgrounds").DeleteAfterSeconds(10);
         }
     }
 }

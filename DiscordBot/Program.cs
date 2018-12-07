@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -64,12 +64,11 @@ namespace DiscordBot
             _feedService = new FeedService(_client, _settings);
             _updateService = new UpdateService(_client, _loggingService, _publisherService, _databaseService, _animeService, _settings,
                 _feedService);
-            _userService = new UserService(_databaseService, _loggingService, _updateService, _settings, _userSettings);
-
+            _achievementService = new AchievementService(_databaseService);
+            _userService = new UserService(_databaseService, _achievementService, _loggingService, _updateService, _settings, _userSettings);
             _audioService = new AudioService(_loggingService, _client, _settings);
             _casinoService = new CasinoService(_loggingService, _updateService, _databaseService, _settings);
             _currencyService = new CurrencyService();
-            _achievementService = new AchievementService(_databaseService);
             _serviceCollection = new ServiceCollection();
             _serviceCollection.AddSingleton(_loggingService);
             _serviceCollection.AddSingleton(_databaseService);
@@ -142,7 +141,6 @@ namespace DiscordBot
             _client.MessageReceived += HandleCommand;
             _client.MessageReceived += _userService.UpdateXp;
             _client.MessageReceived += _userService.Thanks;
-            _client.MessageReceived += _achievementService.Test;
             _client.MessageUpdated += _userService.ThanksEdited;
             _client.MessageReceived += _userService.CodeCheck;
             _client.MessageReceived += _userService.ScoldForAtEveryoneUsage;

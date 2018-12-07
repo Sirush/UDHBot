@@ -218,6 +218,30 @@ namespace DiscordBot.Services
 
             return 0;
         }
+
+        public String GetUserBackground(ulong id) {
+            return GetAttributeFromUser(id, "background");
+        }
+
+        public async void SetUserBackground(ulong id, String background) {
+            try
+            {
+                background = MySqlHelper.EscapeString(background);
+                using (var connection = new MySqlConnection(_connection))
+                {
+                    var command = new MySqlCommand($"UPDATE users SET background=@Value WHERE userid='{id}'", connection);
+                    command.Parameters.AddWithValue("@Value", background);
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                }
+            }
+            catch (Exception e)
+            {
+                await _logging.LogAction($"Error when trying to edit attribute background from user {id} with value {background} : {e}",
+                    true,
+                    false);
+            }
+        }
         
         public Achievement[] GetUserAchievements(ulong id) {
             List<string> achievementIds = new List<string>();

@@ -76,7 +76,11 @@
             "id": "christmasEvent2018",
             "name": "UDC Christmas Event 2018",
             "description": "Complete UDC Christmas Event 2018",
-            "xp": "5000"
+            "xp": "5000",
+            "background": {
+                "name": "Christmas 2018",
+                "url": "christmas_2018_background.jpg"
+            }
         }
     ]
 }

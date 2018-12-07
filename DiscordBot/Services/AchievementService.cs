@@ -52,7 +52,7 @@ namespace DiscordBot.Services {
             
             foreach (Achievement achievement in xpAchievements) {
                 if (level >= Int64.Parse(achievement.value)) {
-                    //Make sure they dont already have it
+                    //Make sure they don't already have it
                     if (!userAchievements.Contains(achievement)) {
                         //Grant achievement
                         _databaseService.AddUserAchievement(achievement, message.Author.Id);
@@ -64,18 +64,18 @@ namespace DiscordBot.Services {
             CheckUserRank(message, userAchievements);
         }
         
-        public void OnGainKarma(SocketMessage message) {
-            Achievement[] userAchievements = _databaseService.GetUserAchievements(message.Author.Id);
+        public void OnGainKarma(SocketUser user, SocketMessage message) {
+            Achievement[] userAchievements = _databaseService.GetUserAchievements(user.Id);
 
-            int karma = 10;//_databaseService.GetUserKarma(message.Author.Id);
+            int karma = _databaseService.GetUserKarma(user.Id);
             
             foreach (Achievement achievement in karmaAchievements) {
                 if (karma >= Int64.Parse(achievement.value)) {
                     //Make sure they don't already have it
                     if (!userAchievements.Contains(achievement)) {
                         //Grant achievement
-                        _databaseService.AddUserAchievement(achievement, message.Author.Id);
-                        ShowEarnedAchievement(message.Author.Username, achievement, message.Channel);
+                        _databaseService.AddUserAchievement(achievement, user.Id);
+                        ShowEarnedAchievement(user.Username, achievement, message.Channel);
                     }
                 }
             }
@@ -93,15 +93,6 @@ namespace DiscordBot.Services {
                         ShowEarnedAchievement(message.Author.Username, achievement, message.Channel);
                     }
                 }
-            }
-        }
-
-        public async Task Test(SocketMessage messageParam) {
-            try {
-                OnGainKarma(messageParam);
-            }
-            catch (Exception e) {
-                Console.WriteLine("ERROR: " + e.InnerException);
             }
         }
     }
