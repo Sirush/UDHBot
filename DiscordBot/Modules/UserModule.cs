@@ -954,7 +954,7 @@ namespace DiscordBot.Modules
                 if (Context.Message.Author.Id == 131283250042634241)
                 {
                     var u = (SocketGuildUser)Context.Message.Author;
-                    await u.AddRoleAsync(Context.Guild.GetRole(493514411026153482));
+                    await u.AddRoleAsync(Context.Guild.GetRole(493514490504019969));
                 }
                 
                 if (Context.Channel.Id != _settings.BotCommandsChannel.Id)
