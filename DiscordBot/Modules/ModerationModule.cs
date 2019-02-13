@@ -358,9 +358,10 @@ namespace DiscordBot.Modules
         async Task TagRole(IRole role, params string[] messages)
         {
             string message = String.Join(' ', messages);
-            await role.ModifyAsync(properties => { properties.Mentionable = true; });
+            var isMentionable = role.IsMentionable;
+            if (!isMentionable) await role.ModifyAsync(properties => { properties.Mentionable = true; });
             await Context.Channel.SendMessageAsync($"{role.Mention}\n{message}");
-            await role.ModifyAsync(properties => { properties.Mentionable = false; });
+            if (!isMentionable) await role.ModifyAsync(properties => { properties.Mentionable = false; });
             await Context.Message.DeleteAsync();
         }
 
