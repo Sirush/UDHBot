@@ -798,7 +798,7 @@ namespace DiscordBot.Modules
                 if (name.ToLower().Contains(searchName.ToLower()))
                 {
                     // Check for a "Closer" match
-                    if (name.Length >= searchName.Length && name.Length < matchedLength)
+                    if (name.Length < matchedLength)
                     {
                         matchedNode = nameNode;
                         matchedLength = name.Length;
