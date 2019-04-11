@@ -25,9 +25,18 @@ namespace DiscordBot.Modules
         {
             var channelList = Context.Guild.GetChannelsAsync().Result;
             var hash = Context.User.Id.ToString().GetSHA256().Substring(0, 8);
+
+            // Additional hash to avoid collisions with archives
+            string guidString = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+            // Crop off the last 2 characters (always ==, gives us 22 char GUID)
+            guidString = guidString.Substring(0, guidString.Length - 2);
+            // Replace the 2 chars we can't use in Titles (- is fine since we don't do this at the start of the title)
+            guidString = guidString.Replace('+', '-');
+            guidString = guidString.Replace('/', '_');
+
             var channelName =
                 ParseToDiscordChannel(
-                    $"{_settings.ComplaintChannelPrefix}-{hash}");
+                    $"{_settings.ComplaintChannelPrefix}-{hash}-{guidString}");
             var categoryExists = false;
             var categoryList = Context.Guild.GetCategoriesAsync().Result;
             var categoryName = _settings.ComplaintCategoryName;
