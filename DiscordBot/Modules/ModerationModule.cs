@@ -79,7 +79,7 @@ namespace DiscordBot.Modules
 
                 await MuteUser(user, (uint) (dt - DateTime.Now).TotalSeconds, messages);
             }
-            catch (Exception e)
+            catch
             {
                 await ReplyAsync("Invalid DateTime specified.");
                 await Context.Message.DeleteAsync();
@@ -208,11 +208,13 @@ namespace DiscordBot.Modules
             await channel.DeleteMessagesAsync(messages);
 
             var m = await ReplyAsync("Messages deleted.");
+            #pragma warning disable CS4014
             Task.Delay(5000).ContinueWith(t =>
             {
                 m.DeleteAsync();
                 _logging.LogAction($"{Context.User.Username} has removed {count} messages from {Context.Channel.Name}");
             });
+            #pragma warning restore CS4014
         }
 
         [Command("clear"), Summary("Remove messages until the message at the specified id")]
@@ -226,11 +228,13 @@ namespace DiscordBot.Modules
             await channel.DeleteMessagesAsync(messages);
 
             var m = await ReplyAsync("Messages deleted.");
+            #pragma warning disable CS4014
             Task.Delay(5000).ContinueWith(t =>
             {
                 m.DeleteAsync();
                 _logging.LogAction($"{Context.User.Username} has removed {messages.Count()} messages from {Context.Channel.Name}");
             });
+            #pragma warning restore CS4014
         }
 
         [Command("kick"), Summary("Kick a user")]
@@ -264,7 +268,9 @@ namespace DiscordBot.Modules
         [RequireStaff]
         async Task Rules(int seconds = 60)
         {
+            #pragma warning disable CS4014
             Rules(Context.Channel, seconds);
+            #pragma warning restore CS4014
             await Context.Message.DeleteAsync();
         }
 

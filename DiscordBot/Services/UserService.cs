@@ -481,7 +481,7 @@ namespace DiscordBot.Services
                 if (((mentionedSelf || mentionedBot) && mentions.Count == 1) || (mentionedBot && mentionedSelf && mentions.Count == 2))
                     return;
                 _thanksCooldown.AddCooldown(userId, _thanksCooldownTime);
-//Add thanks reminder cooldown after thanking to avoid casual thanks triggering remind afterwards
+                //Add thanks reminder cooldown after thanking to avoid casual thanks triggering remind afterwards
                 ThanksReminderCooldown.AddCooldown(userId, _thanksReminderCooldownTime);
                 await messageParam.Channel.SendMessageAsync(sb.ToString());
                 await _loggingService.LogAction(sb + " in channel " + messageParam.Channel.Name);
@@ -499,7 +499,9 @@ namespace DiscordBot.Services
 
             if (mentions.Count == 0 && _canEditThanks.Add(messageParam.Id))
             {
+                #pragma warning disable CS4014
                 _canEditThanks.RemoveAfterSeconds(messageParam.Id, 240);
+                #pragma warning restore CS4014
             }
         }
 
@@ -509,12 +511,12 @@ namespace DiscordBot.Services
                 return;
             ulong userId = messageParam.Author.Id;
 
-//Simple check to cover most large code posting cases without being an issue for most non-code messages
-// TODO: Perhaps work out a more advanced Regex based check at a later time
+            //Simple check to cover most large code posting cases without being an issue for most non-code messages
+            // TODO: Perhaps work out a more advanced Regex based check at a later time
             if (!CodeReminderCooldown.HasUser(userId))
             {
                 string content = messageParam.Content;
-//Changed to a regex check so that bot only alerts when there aren't surrounding backticks, instead of just looking if no triple backticks exist.
+                //Changed to a regex check so that bot only alerts when there aren't surrounding backticks, instead of just looking if no triple backticks exist.
                 bool foundCodeTags = Regex.Match(content, ".*?`[^`].*?`", RegexOptions.Singleline).Success;
                 bool foundCurlyFries = (content.Contains("{") && content.Contains("}"));
                 if (!foundCodeTags && foundCurlyFries)
