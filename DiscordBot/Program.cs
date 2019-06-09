@@ -32,7 +32,6 @@ namespace DiscordBot
         private UpdateService _updateService;
         private AudioService _audioService;
         private AnimeService _animeService;
-        private CasinoService _casinoService;
         private FeedService _feedService;
         private CurrencyService _currencyService;
 
@@ -62,10 +61,9 @@ namespace DiscordBot
             _feedService = new FeedService(_client, _settings);
             _updateService = new UpdateService(_client, _loggingService, _publisherService, _databaseService, _animeService, _settings,
                 _feedService);
-            _userService = new UserService(_databaseService, _loggingService, _updateService, _settings, _userSettings);
+            _userService = new UserService(_client, _databaseService, _loggingService, _updateService, _settings, _userSettings);
 
             _audioService = new AudioService(_loggingService, _client, _settings);
-            _casinoService = new CasinoService(_loggingService, _updateService, _databaseService, _settings);
             _currencyService = new CurrencyService();
             _serviceCollection = new ServiceCollection();
             _serviceCollection.AddSingleton(_loggingService);
@@ -77,7 +75,6 @@ namespace DiscordBot
             _serviceCollection.AddSingleton(_updateService);
             _serviceCollection.AddSingleton(_audioService);
             _serviceCollection.AddSingleton(_animeService);
-            _serviceCollection.AddSingleton(_casinoService);
             _serviceCollection.AddSingleton(_settings);
             _serviceCollection.AddSingleton(_rules);
             _serviceCollection.AddSingleton(_payWork);
@@ -89,7 +86,6 @@ namespace DiscordBot
             await InstallCommands();
 
             _client.Log += Logger;
-
             // await InitCommands();
 
             await _client.LoginAsync(TokenType.Bot, _settings.Token);
