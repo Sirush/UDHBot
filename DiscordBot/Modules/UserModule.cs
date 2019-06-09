@@ -46,7 +46,8 @@ namespace DiscordBot.Modules
             _settings = settings;
         }
 
-        [Command("help"), Summary("Display available commands (this). Syntax : !help")]
+        [Command("help")]
+        [Summary("Display available commands (this). Syntax : !help")]
         [Alias("command", "commands")]
         private async Task DisplayHelp()
         {
@@ -66,14 +67,16 @@ namespace DiscordBot.Modules
 
         #region Rules
 
-        [Command("rules"), Summary("Get the of the current channel by DM. Syntax : !rules")]
+        [Command("rules")]
+        [Summary("Get the of the current channel by DM. Syntax : !rules")]
         private async Task Rules()
         {
             await Rules(Context.Channel);
             await Context.Message.DeleteAsync();
         }
 
-        [Command("rules"), Summary("Get the rules of the mentionned channel by DM. !rules #channel")]
+        [Command("rules")]
+        [Summary("Get the rules of the mentionned channel by DM. !rules #channel")]
         [Alias("rule")]
         private async Task Rules(IMessageChannel channel)
         {
@@ -95,7 +98,8 @@ namespace DiscordBot.Modules
             if (deleteAsync != null) await deleteAsync;
         }
 
-        [Command("globalrules"), Summary("Get the Global Rules by DM. Syntax : !globalrules")]
+        [Command("globalrules")]
+        [Summary("Get the Global Rules by DM. Syntax : !globalrules")]
         private async Task GlobalRules(int seconds = 60)
         {
             string globalRules = _rules.Channel.First(x => x.Id == 0).Content;
@@ -104,7 +108,8 @@ namespace DiscordBot.Modules
             await Context.Message.DeleteAsync();
         }
 
-        [Command("channels"), Summary("Get description of the channels by DM. Syntax : !channels")]
+        [Command("channels")]
+        [Summary("Get description of the channels by DM. Syntax : !channels")]
         private async Task ChannelsDescription()
         {
             //Display rules of this channel for x seconds
@@ -133,7 +138,8 @@ namespace DiscordBot.Modules
 
         #region XP & Karma
 
-        [Command("karma"), Summary("Display description of what Karma is for. Syntax : !karma")]
+        [Command("karma")]
+        [Summary("Display description of what Karma is for. Syntax : !karma")]
         private async Task KarmaDescription(int seconds = 60)
         {
             await ReplyAsync($"{Context.User.Username}, " +
@@ -188,7 +194,8 @@ namespace DiscordBot.Modules
             await ReplyAsync(sb.ToString()).DeleteAfterTime(minutes: 3);
         }
 
-        [Command("profile"), Summary("Display current user profile card. Syntax : !profile")]
+        [Command("profile")]
+        [Summary("Display current user profile card. Syntax : !profile")]
         private async Task DisplayProfile()
         {
             IUserMessage profile =
@@ -200,7 +207,8 @@ namespace DiscordBot.Modules
             await profile.DeleteAsync();
         }
 
-        [Command("profile"), Summary("Display profile card of mentionned user. Syntax : !profile @user")]
+        [Command("profile")]
+        [Summary("Display profile card of mentionned user. Syntax : !profile @user")]
         private async Task DisplayProfile(IUser user)
         {
             IUserMessage profile = await Context.Channel.SendFileAsync(await _userService.GenerateProfileCard(user));
@@ -211,7 +219,8 @@ namespace DiscordBot.Modules
             await profile.DeleteAsync();
         }
 
-        [Command("joindate"), Summary("Display your join date. Syntax : !joindate")]
+        [Command("joindate")]
+        [Summary("Display your join date. Syntax : !joindate")]
         private async Task JoinDate()
         {
             var userId = Context.User.Id;
@@ -235,8 +244,8 @@ namespace DiscordBot.Modules
             await ReplyAsync(message).DeleteAfterSeconds(240);
         }
 
-        [Command("disablecodetips"),
-         Summary("Prevents being reminded about using proper code formatting when code is detected. Syntax : !disablecodetips")]
+        [Command("disablecodetips")]
+        [Summary("Prevents being reminded about using proper code formatting when code is detected. Syntax : !disablecodetips")]
         private async Task DisableCodeTips()
         {
             ulong userID = Context.User.Id;
@@ -253,9 +262,8 @@ namespace DiscordBot.Modules
 
         #endregion
 
-
-        [Command("disablethanksreminder"),
-         Summary("Prevents being reminded to mention the person you are thanking. Syntax : !disablethanksreminder")]
+        [Command("disablethanksreminder")]
+        [Summary("Prevents being reminded to mention the person you are thanking. Syntax : !disablethanksreminder")]
         private async Task DisableThanksReminder()
         {
             ulong userID = Context.User.Id;
@@ -271,7 +279,8 @@ namespace DiscordBot.Modules
         }
 
 
-        [Command("quote"), Summary("Quote a message. Syntax : !quote messageid (#channelname) (optionalSubtitle)")]
+        [Command("quote")]
+        [Summary("Quote a message. Syntax : !quote messageid (#channelname) (optionalSubtitle)")]
         private async Task QuoteMessage(ulong id, IMessageChannel channel = null, string subtitle = null)
         {
             if (subtitle != null && (subtitle.Contains("@everyone") || subtitle.Contains("@here"))) return;
@@ -306,8 +315,8 @@ namespace DiscordBot.Modules
             await Context.Message.DeleteAsync();
         }
 
-        [Command("compile"),
-         Summary("Try to compile a snippet of C# code. Be sure to escape your strings. Syntax : !compile \"Your code\"")]
+        [Command("compile")]
+        [Summary("Try to compile a snippet of C# code. Be sure to escape your strings. Syntax : !compile \"Your code\"")]
         [Alias("code", "compute", "assert")]
         private async Task CompileCode(params string[] code)
         {
@@ -372,6 +381,42 @@ namespace DiscordBot.Modules
 
                 newMessage = ($"\nFull result : https://hastebin.com/{response["key"]}\n" + fullMessage).Truncate(1990) + "```";
                 await message.ModifyAsync(m => m.Content = newMessage);
+            }
+        }
+
+        /*
+            By: djgaven588
+            Issue(s) adressed: https://github.com/Sirush/UDHBot/issues/64
+            Summary: Takes a user's code and uploads it to Hastebin.
+            Steps: Processes the input to prepare it for upload, deletes the user's original message, 
+                posts the code to hastebin (max of 10k characters), waits for response, and finally
+                sends a message containing who posted the code, a link, and a preview.
+        */
+        [Command("hastebin")]
+        [Summary("Upload your code to hastebin and get the url. Syntax : !hastebin \"Your code\"")]
+        [Alias("pastebin")]
+        private async Task UploadCode(params string[] code)
+        {
+            //:shrug: This was in the 'compile' command, so I assume it is needed to get this to work properly.
+            var codeComplete = Resources.PaizaCodeTemplate.Replace("{code}", string.Join(" ", code));
+            //Delete the user's message in around a second, no need to wait for it.
+            #pragma warning disable CS4014
+            Context.Message.DeleteAfterSeconds(1);
+            #pragma warning restore CS4014
+
+            using (HttpClient client = new HttpClient())
+            {
+                //Post the code to hastebin, and await a response.
+                HttpResponseMessage httpResponse = await client.PostAsync("https://hastebin.com/documents", new StringContent(codeComplete.Truncate(10000)));
+
+                //Convert the response into something more friendly.
+                var response = JsonConvert.DeserializeObject<Dictionary<string, string>>(await httpResponse.Content.ReadAsStringAsync());
+
+                //Generate the response message
+                string msg = ($"Code by: {Context.User.Username} \nLink: https://hastebin.com/{response["key"]} \nPreview: \n```cs" + codeComplete).Truncate(500) + "```";
+
+                //Send it
+                await ReplyAsync(msg);
             }
         }
 
@@ -739,8 +784,7 @@ namespace DiscordBot.Modules
 
         private int ParseNumber(string s)
         {
-            int id;
-            if (int.TryParse(s, out id))
+            if (int.TryParse(s, out int id))
             {
                 return id;
             }
@@ -781,7 +825,7 @@ namespace DiscordBot.Modules
             string birthdayTable =
                 "https://docs.google.com/spreadsheets/d/10iGiKcrBl1fjoBNTzdtjEVYEgOfTveRXdI5cybRTnj4/gviz/tq?tqx=out:html&gid=318080247&range=B:D";
             HtmlDocument doc = new HtmlWeb().Load(birthdayTable);
-            DateTime birthdate = default(DateTime);
+            DateTime birthdate = default;
 
             HtmlNode matchedNode = null;
             int matchedLength = int.MaxValue;
@@ -840,7 +884,7 @@ namespace DiscordBot.Modules
             }
 
             // Business as usual
-            if (birthdate == default(DateTime))
+            if (birthdate == default)
             {
                 await ReplyAsync(
                         $"Sorry, I couldn't find **{searchName}**'s birthday date. They can add it at https://docs.google.com/forms/d/e/1FAIpQLSfUglZtJ3pyMwhRk5jApYpvqT3EtKmLBXijCXYNwHY-v-lKxQ/viewform ! :stuck_out_tongue_winking_eye: ")
