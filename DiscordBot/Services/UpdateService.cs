@@ -379,7 +379,7 @@ namespace DiscordBot.Services
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                await Debug.LogError("Download Doc Database", e);
             }
         }
 
@@ -427,7 +427,7 @@ namespace DiscordBot.Services
             try { openSearchResponse = await htmlWeb.LoadFromWebAsync(openSearchUri); }
             catch
             {
-                Console.WriteLine("Wikipedia method failed loading URL: " + openSearchUri);
+                await Debug.LogError("Download Wikipedia Article", "Wikipedia method failed loading URL: " + openSearchUri);
                 return (null, null, null);
             }
             try
@@ -441,7 +441,7 @@ namespace DiscordBot.Services
                     || !openSearchJSON[3].Any<JToken>())
                 { return (null, null, null); }
 
-                String articleName = openSearchJSON[1][0].ToString();
+                string articleName = openSearchJSON[1][0].ToString();
                 String articleExtract = openSearchJSON[2][0].ToString();
                 String articleUrl = openSearchJSON[3][0].ToString();
 
@@ -466,8 +466,8 @@ namespace DiscordBot.Services
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                Console.WriteLine("Wikipedia method likely failed to parse JSON response from: " + openSearchUri);
+                await Debug.LogError("Download Wikipedia Article", e);
+                await Debug.LogError("Download Wikipedia Article", "Wikipedia method likely failed to parse JSON response from: " + openSearchUri);
             }
 
             return (null, null, null);

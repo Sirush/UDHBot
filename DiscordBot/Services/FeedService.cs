@@ -61,7 +61,7 @@ namespace DiscordBot.Services
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                await Debug.LogError("Unity Beta Check", e);
             }
         }
 
@@ -99,7 +99,7 @@ namespace DiscordBot.Services
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                await Debug.LogError("Unity Release Check", e);
             }
         }
 
@@ -136,7 +136,7 @@ namespace DiscordBot.Services
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                await Debug.LogError("Unity Blog Update", e);
             }
         }
     }

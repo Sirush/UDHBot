@@ -85,7 +85,7 @@ namespace DiscordBot
 
             await InstallCommands();
 
-            _client.Log += Logger;
+            _client.Log += Debug.Log;
             // await InitCommands();
 
             await _client.LoginAsync(TokenType.Bot, _settings.Token);
@@ -93,38 +93,12 @@ namespace DiscordBot
 
             _client.Ready += () =>
             {
-                Console.WriteLine("Bot is connected");
+                Debug.Log("Client State", "Bot is connected");
                 //_audio.Music();
                 return Task.CompletedTask;
             };
 
             await Task.Delay(-1);
-        }
-
-        private static Task Logger(LogMessage message)
-        {
-            ConsoleColor cc = Console.ForegroundColor;
-            switch (message.Severity)
-            {
-                case LogSeverity.Critical:
-                case LogSeverity.Error:
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    break;
-                case LogSeverity.Warning:
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    break;
-                case LogSeverity.Info:
-                    Console.ForegroundColor = ConsoleColor.White;
-                    break;
-                case LogSeverity.Verbose:
-                case LogSeverity.Debug:
-                    Console.ForegroundColor = ConsoleColor.DarkGray;
-                    break;
-            }
-
-            Console.WriteLine($"{DateTime.Now,-19} [{message.Severity,8}] {message.Source}: {message.Message}");
-            Console.ForegroundColor = cc;
-            return Task.CompletedTask;
         }
 
         public async Task InstallCommands()

@@ -329,7 +329,7 @@ namespace DiscordBot.Services
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e);
+                        await Debug.LogError("Generate Profile Card", e);
                         profile.Picture = new MagickImage($"{_settings.ServerRootPath}/images/default.png");
                     }
                 }
