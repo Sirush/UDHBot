@@ -320,8 +320,10 @@ namespace DiscordBot.Modules
         [Alias("code", "compute", "assert")]
         private async Task CompileCode( [Remainder] string code)
         {
+            //Use a code template, and fill it with the code provided
             var codeComplete = Resources.PaizaCodeTemplate.Replace("{code}", code);
 
+            //Set all the parameters for compiling and running the code
             var parameters = new Dictionary<string, string> {{"source_code", codeComplete}, {"language", "csharp"}, {"api_key", "guest"}};
 
             var content = new FormUrlEncodedContent(parameters);
@@ -331,16 +333,19 @@ namespace DiscordBot.Modules
 
             using (HttpClient client = new HttpClient())
             {
+                //Send the code off to be ran
                 HttpResponseMessage httpResponse = await client.PostAsync("http://api.paiza.io/runners/create", content);
                 var response = JsonConvert.DeserializeObject<Dictionary<string, string>>(await httpResponse.Content.ReadAsStringAsync());
 
                 string id = response["id"];
-                string status;
                 DateTime startTime = DateTime.Now;
                 const int maxTime = 30;
 
+                //Loop and wait for the details to be available
+                string status;
                 do
                 {
+                    //Ask for the details
                     httpResponse = await client.GetAsync($"http://api.paiza.io/runners/get_details?id={id}&api_key=guest");
                     response = JsonConvert.DeserializeObject<Dictionary<string, string>>(await httpResponse.Content.ReadAsStringAsync());
                     status = response["status"];
@@ -348,14 +353,15 @@ namespace DiscordBot.Modules
                 } while (status != "completed" && (DateTime.Now - startTime).TotalSeconds < maxTime);
 
                 string newMessage;
-
                 if (status != "completed")
                 {
+                    //Failed, as the code didn't run in time!
                     newMessage = (message.Content + "The code didn't compile in time.").Truncate(1990);
                     await message.ModifyAsync(m => m.Content = newMessage);
                     return;
                 }
 
+                //Get details
                 string build_stddout = response["build_stdout"];
                 string stdout = response["stdout"];
                 string stderr = response["stderr"];
@@ -365,21 +371,31 @@ namespace DiscordBot.Modules
                 string fullMessage;
                 if (result == "failure")
                 {
+                    //Code failed
                     fullMessage = message.Content + "The code resulted in a failure.\n";
                     fullMessage += build_stddout.Length > 0 ? build_stddout.AsCodeBlock() : string.Empty;
                     fullMessage += build_stderr.Length > 0 ? build_stderr.AsCodeBlock() : string.Empty;
                 }
                 else
                 {
+                    //Code succeeded
                     fullMessage = message.Content + "Result : ";
                     fullMessage += stdout.Length > 0 ? stdout.AsCodeBlock() : string.Empty;
                     fullMessage += stderr.Length > 0 ? stderr.AsCodeBlock() : string.Empty;
                 }
 
+                //Upload full message to hastebin
                 httpResponse = await client.PostAsync("https://hastebin.com/documents", new StringContent(fullMessage.Truncate(10000)));
                 response = JsonConvert.DeserializeObject<Dictionary<string, string>>(await httpResponse.Content.ReadAsStringAsync());
 
+                //Update message with the new details.
                 newMessage = ($"\nFull result : https://hastebin.com/{response["key"]}\n" + fullMessage).Truncate(1990);
+
+                //Make sure to give the code block an end!
+                if (!newMessage.EndsWith("```"))
+                    newMessage += "```";
+
+                //Actually update message
                 await message.ModifyAsync(m => m.Content = newMessage);
             }
         }
@@ -395,33 +411,26 @@ namespace DiscordBot.Modules
         [Command("hastebin")]
         [Summary("Upload your code to hastebin and get the url. Syntax : !hastebin \"Your code\"")]
         [Alias("pastebin")]
-        private async Task UploadCode( [Remainder] string code)
+        private async Task UploadCode([Remainder] string code)
         {
-            try
+            //Delete the user's message in around a second, no need to wait for it.
+            #pragma warning disable CS4014
+            Context.Message.DeleteAfterSeconds(1);
+            #pragma warning restore CS4014
+
+            using (HttpClient client = new HttpClient())
             {
-                //Delete the user's message in around a second, no need to wait for it.
-                #pragma warning disable CS4014
-                Context.Message.DeleteAfterSeconds(1);
-                #pragma warning restore CS4014
+                //Post the code to hastebin, and await a response.
+                HttpResponseMessage httpResponse = await client.PostAsync("https://hastebin.com/documents", new StringContent(code.Truncate(10000)));
 
-                using (HttpClient client = new HttpClient())
-                {
-                    //Post the code to hastebin, and await a response.
-                    HttpResponseMessage httpResponse = await client.PostAsync("https://hastebin.com/documents", new StringContent(code.Truncate(10000)));
+                //Convert the response into something more friendly.
+                var response = JsonConvert.DeserializeObject<Dictionary<string, string>>(await httpResponse.Content.ReadAsStringAsync());
 
-                    //Convert the response into something more friendly.
-                    var response = JsonConvert.DeserializeObject<Dictionary<string, string>>(await httpResponse.Content.ReadAsStringAsync());
+                //Generate the response message
+                string msg = ($"Code by: {Context.User.Username} \nLink: https://hastebin.com/{response["key"]} \nPreview: \n```cs\n" + code).Truncate(500) + "\n```";
 
-                    //Generate the response message
-                    string msg = ($"Code by: {Context.User.Username} \nLink: https://hastebin.com/{response["key"]} \nPreview: \n```cs\n" + code).Truncate(500) + "\n```";
-
-                    //Send it
-                    await ReplyAsync(msg);
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError("Hastebin Command", e);
+                //Send it
+                await ReplyAsync(msg);
             }
         }
 
