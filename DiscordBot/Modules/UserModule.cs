@@ -385,15 +385,15 @@ namespace DiscordBot.Modules
                 }
 
                 //Upload full message to hastebin
-                httpResponse = await client.PostAsync("https://hastebin.com/documents", new StringContent(fullMessage.Truncate(10000)));
+                httpResponse = await client.PostAsync("https://hastebin.com/documents", new StringContent(fullMessage.Truncate(20000)));
                 response = JsonConvert.DeserializeObject<Dictionary<string, string>>(await httpResponse.Content.ReadAsStringAsync());
 
                 //Update message with the new details.
-                newMessage = ($"\nFull result : https://hastebin.com/{response["key"]}\n" + fullMessage).Truncate(1990);
+                newMessage = ($"\nFull result : https://hastebin.com/{response["key"]}\n" + fullMessage).Truncate(1250);
 
                 //Make sure to give the code block an end!
                 if (!newMessage.EndsWith("```"))
-                    newMessage += "```";
+                    newMessage += "...```";
 
                 //Actually update message
                 await message.ModifyAsync(m => m.Content = newMessage);
@@ -421,13 +421,13 @@ namespace DiscordBot.Modules
             using (HttpClient client = new HttpClient())
             {
                 //Post the code to hastebin, and await a response.
-                HttpResponseMessage httpResponse = await client.PostAsync("https://hastebin.com/documents", new StringContent(code.Truncate(10000)));
+                HttpResponseMessage httpResponse = await client.PostAsync("https://hastebin.com/documents", new StringContent(code.Truncate(20000)));
 
                 //Convert the response into something more friendly.
                 var response = JsonConvert.DeserializeObject<Dictionary<string, string>>(await httpResponse.Content.ReadAsStringAsync());
 
                 //Generate the response message
-                string msg = ($"Code by: {Context.User.Username} \nLink: https://hastebin.com/{response["key"]} \nPreview: \n```cs\n" + code).Truncate(500) + "\n```";
+                string msg = ($"Code by: {Context.User.Username} \nLink: https://hastebin.com/{response["key"]} \nPreview: \n```cs\n" + code).Truncate(450) + "\n```";
 
                 //Send it
                 await ReplyAsync(msg);
