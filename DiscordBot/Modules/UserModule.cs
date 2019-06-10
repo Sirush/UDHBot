@@ -318,9 +318,9 @@ namespace DiscordBot.Modules
         [Command("compile")]
         [Summary("Try to compile a snippet of C# code. Be sure to escape your strings. Syntax : !compile \"Your code\"")]
         [Alias("code", "compute", "assert")]
-        private async Task CompileCode(params string[] code)
+        private async Task CompileCode( [Remainder] string code)
         {
-            var codeComplete = Resources.PaizaCodeTemplate.Replace("{code}", string.Join(" ", code));
+            var codeComplete = Resources.PaizaCodeTemplate.Replace("{code}", code);
 
             var parameters = new Dictionary<string, string> {{"source_code", codeComplete}, {"language", "csharp"}, {"api_key", "guest"}};
 
@@ -379,7 +379,7 @@ namespace DiscordBot.Modules
                 httpResponse = await client.PostAsync("https://hastebin.com/documents", new StringContent(fullMessage.Truncate(10000)));
                 response = JsonConvert.DeserializeObject<Dictionary<string, string>>(await httpResponse.Content.ReadAsStringAsync());
 
-                newMessage = ($"\nFull result : https://hastebin.com/{response["key"]}\n" + fullMessage).Truncate(1990) + "```";
+                newMessage = ($"\nFull result : https://hastebin.com/{response["key"]}\n" + fullMessage).Truncate(1990);
                 await message.ModifyAsync(m => m.Content = newMessage);
             }
         }
@@ -395,28 +395,33 @@ namespace DiscordBot.Modules
         [Command("hastebin")]
         [Summary("Upload your code to hastebin and get the url. Syntax : !hastebin \"Your code\"")]
         [Alias("pastebin")]
-        private async Task UploadCode(params string[] code)
+        private async Task UploadCode( [Remainder] string code)
         {
-            //:shrug: This was in the 'compile' command, so I assume it is needed to get this to work properly.
-            var codeComplete = Resources.PaizaCodeTemplate.Replace("{code}", string.Join(" ", code));
-            //Delete the user's message in around a second, no need to wait for it.
-            #pragma warning disable CS4014
-            Context.Message.DeleteAfterSeconds(1);
-            #pragma warning restore CS4014
-
-            using (HttpClient client = new HttpClient())
+            try
             {
-                //Post the code to hastebin, and await a response.
-                HttpResponseMessage httpResponse = await client.PostAsync("https://hastebin.com/documents", new StringContent(codeComplete.Truncate(10000)));
+                //Delete the user's message in around a second, no need to wait for it.
+                #pragma warning disable CS4014
+                Context.Message.DeleteAfterSeconds(1);
+                #pragma warning restore CS4014
 
-                //Convert the response into something more friendly.
-                var response = JsonConvert.DeserializeObject<Dictionary<string, string>>(await httpResponse.Content.ReadAsStringAsync());
+                using (HttpClient client = new HttpClient())
+                {
+                    //Post the code to hastebin, and await a response.
+                    HttpResponseMessage httpResponse = await client.PostAsync("https://hastebin.com/documents", new StringContent(code.Truncate(10000)));
 
-                //Generate the response message
-                string msg = ($"Code by: {Context.User.Username} \nLink: https://hastebin.com/{response["key"]} \nPreview: \n```cs" + codeComplete).Truncate(500) + "```";
+                    //Convert the response into something more friendly.
+                    var response = JsonConvert.DeserializeObject<Dictionary<string, string>>(await httpResponse.Content.ReadAsStringAsync());
 
-                //Send it
-                await ReplyAsync(msg);
+                    //Generate the response message
+                    string msg = ($"Code by: {Context.User.Username} \nLink: https://hastebin.com/{response["key"]} \nPreview: \n```cs\n" + code).Truncate(500) + "\n```";
+
+                    //Send it
+                    await ReplyAsync(msg);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Hastebin Command", e);
             }
         }
 
