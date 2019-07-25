@@ -34,9 +34,10 @@ If you run the bot now, it will attempt to generate the table for the database. 
 *Once you have imported the database, be sure to create a user in phpmyadmin which can access the database, and the details match your **DbConnectionString**.*
 
 # Notes
-When you hit run, you'll probably see some warnings and errors if you've sped through this without much thought.
-- ***Yellow*** : Warnings *(The bot will continue to run, but may disable some features)*
-- ***Red*** : Errors *(Usually a pending exception/crash is moments away)*
+I'll re-introduce some of this later.
+~~When you hit run, you'll probably see some warnings and errors if you've sped through this without much thought.~~
+~~- ***Yellow*** : Warnings *(The bot will continue to run, but may disable some features)*~~
+~~- ***Red*** : Errors *(Usually a pending exception/crash is moments away)*~~
 
 I strongly suggest giving [Discord.Net API Documention](https://discord.foxbot.me/stable/api/index.html) a read when interacting with systems you haven't seen before. Discord Net uses Tasks, Asynchronous Patterns and heavy use of Polymorphism, some systems might not always be straight forward.
 
