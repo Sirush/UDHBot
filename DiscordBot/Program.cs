@@ -203,8 +203,8 @@ namespace DiscordBot
         }
 
         // Crude raid protection
-        float joinDateMaxSeconds = 60;
-        int joinMaxNewUsers = 0;
+        float joinDateMaxSeconds = 2;
+        int joinMaxNewUsers = 4;
         string joinKickMessage = "You have been detected as raiding the server. If this is not correct, please wait a minute and join again.";
         DateTime lastJoinDate = DateTime.Now;
         List<RaidContainer> usersInRaid = new List<RaidContainer>();
