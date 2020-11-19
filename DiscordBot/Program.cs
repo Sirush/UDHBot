@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -6,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Rest;
 using Discord.WebSocket;
 using DiscordBot.Extensions;
 using DiscordBot.Services;
@@ -97,6 +99,9 @@ namespace DiscordBot
                 //_audio.Music();
                 return Task.CompletedTask;
             };
+
+            // Raid Protection
+            lastJoinDate = DateTime.Now.AddSeconds(-joinDateMaxSeconds);
 
             await Task.Delay(-1);
         }
@@ -197,10 +202,75 @@ namespace DiscordBot
             await _loggingService.LogAction(" ", false, true, embed);
         }
 
+        // Crude raid protection
+        float joinDateMaxSeconds = 60;
+        int joinMaxNewUsers = 0;
+        string joinKickMessage = "You have been detected as raiding the server. If this is not correct, please wait a minute and join again.";
+        DateTime lastJoinDate = DateTime.Now;
+        List<RaidContainer> usersInRaid = new List<RaidContainer>();
+        int usersInRaidCount = 0;
+
+        private class RaidContainer
+        {
+            public SocketGuildUser user;
+            public ulong message;
+            public RaidContainer(SocketGuildUser _user, ulong _message)
+            {
+                user = _user;
+                message = _message;
+            }
+        }
+
         private async Task UserJoined(SocketGuildUser user)
         {
             ulong general = _settings.GeneralChannel.Id;
             var socketTextChannel = _client.GetChannel(general) as SocketTextChannel;
+
+            // Crude Raid Protect
+            // 1) When someone joins, check if current date vs the date of last join is bigger than X [joinDateMaxSeconds] seconds:
+            //      ==> If True, empty usersInRaid and you reset usersInRaidCount to 0.
+            if ((DateTime.Now - lastJoinDate).TotalSeconds > joinDateMaxSeconds)
+            {
+                usersInRaidCount = 0;
+                usersInRaid.Clear();
+            }
+            // 3) Add the current user to usersInRaid, increase usersInRaidCount by 1 and update lastJoinDate to currentTime.
+            usersInRaidCount++;
+            usersInRaid.Add(new RaidContainer(user, 0));
+            lastJoinDate = DateTime.Now;
+            // 4) Check the if the number of users inside usersInRaid is bigger than Y [joinMaxNewUsers]
+            //      ==> If True, kick all users inside usersInRaid and remove them from the list as they are kicked.
+            if (usersInRaid.Count > joinMaxNewUsers)
+            {
+                List<ulong> msgIDs = new List<ulong>();
+                for (int i = usersInRaid.Count - 1; i > 0; i--)
+                {
+                    var raider = usersInRaid[i];
+                    if (raider.message != 0) msgIDs.Add(raider.message);
+                    var u = raider.user as IGuildUser;
+                    try
+                    {
+                        // This can fail, so we have to catch that.
+                        await u.SendMessageAsync(joinKickMessage);
+                    }
+                    catch (Exception)
+                    {
+                        await _loggingService.LogAction($"RaidProtect: Failed to notify user of kick {user.Username}-{user.Id}", false); // We don't save this to file
+                    }
+                    await u.KickAsync();
+                    await _loggingService.LogAction($"RaidProtect: {user.Username}-{user.Id} has been kicked due to high user join rate.");
+                    usersInRaidCount--;
+                    usersInRaid.RemoveAt(i);
+                }
+                // Check if we have messages we can delete (Their join message, we delete these in bulk to reduce our already very likely pending rate limit)
+                if (msgIDs.Count > 0)
+                {
+                    await socketTextChannel.DeleteMessagesAsync(msgIDs);
+                }
+                // We return early since this new user won't be in the server anymore.
+                return;
+            }
+            // End Crude Raid Protect
 
             _databaseService.AddNewUser(user);
 
@@ -224,7 +294,10 @@ namespace DiscordBot
 
             if (socketTextChannel != null)
             {
-                await socketTextChannel.SendMessageAsync(string.Empty, false, em);
+                RestUserMessage msg = await socketTextChannel.SendMessageAsync(string.Empty, false, em);
+                // Store their message in case we need to delete it during a raid
+                if (usersInRaid.Count > 0)
+                    usersInRaid[usersInRaid.Count - 1].message = msg.Id;
             }
 
             string globalRules = _rules.Channel.First(x => x.Id == 0).Content;
