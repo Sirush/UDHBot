@@ -206,9 +206,13 @@ namespace DiscordBot
         float joinDateMaxSeconds = 2;
         int joinMaxNewUsers = 4;
         string joinKickMessage = "You have been detected as raiding the server. If this is not correct, please wait a minute and join again.";
+        string raidProtectLine = "**Raid Protect**:";
         DateTime lastJoinDate = DateTime.Now;
         List<RaidContainer> usersInRaid = new List<RaidContainer>();
         int usersInRaidCount = 0;
+
+        bool raidKickModeEnabled = false;
+        DateTime raidStartTime;
 
         private class RaidContainer
         {
@@ -231,7 +235,11 @@ namespace DiscordBot
             //      ==> If True, empty usersInRaid and you reset usersInRaidCount to 0.
             if ((DateTime.Now - lastJoinDate).TotalSeconds > joinDateMaxSeconds)
             {
+                if (raidKickModeEnabled == true && usersInRaidCount > 0) {
+                    await _loggingService.LogAction($"{raidProtectLine} {usersInRaidCount} users were kicked over {(DateTime.Now - raidStartTime).Seconds} seconds before resuming regular operations.");
+                }
                 usersInRaidCount = 0;
+                raidKickModeEnabled = false;
                 usersInRaid.Clear();
             }
             // 3) Add the current user to usersInRaid, increase usersInRaidCount by 1 and update lastJoinDate to currentTime.
@@ -240,33 +248,19 @@ namespace DiscordBot
             lastJoinDate = DateTime.Now;
             // 4) Check the if the number of users inside usersInRaid is bigger than Y [joinMaxNewUsers]
             //      ==> If True, kick all users inside usersInRaid and remove them from the list as they are kicked.
-            if (usersInRaid.Count > joinMaxNewUsers)
+            if (usersInRaid.Count > joinMaxNewUsers || raidKickModeEnabled)
             {
-                List<ulong> msgIDs = new List<ulong>();
-                for (int i = usersInRaid.Count - 1; i > 0; i--)
+                if (raidKickModeEnabled == false)
                 {
-                    var raider = usersInRaid[i];
-                    if (raider.message != 0) msgIDs.Add(raider.message);
-                    var u = raider.user as IGuildUser;
-                    try
-                    {
-                        // This can fail, so we have to catch that.
-                        await u.SendMessageAsync(joinKickMessage);
-                    }
-                    catch (Exception)
-                    {
-                        await _loggingService.LogAction($"RaidProtect: Failed to notify user of kick {user.Username}-{user.Id}", false); // We don't save this to file
-                    }
-                    await u.KickAsync();
-                    await _loggingService.LogAction($"RaidProtect: {user.Username}-{user.Id} has been kicked due to high user join rate.");
-                    usersInRaidCount--;
-                    usersInRaid.RemoveAt(i);
+                    raidStartTime = DateTime.Now;
                 }
-                // Check if we have messages we can delete (Their join message, we delete these in bulk to reduce our already very likely pending rate limit)
-                if (msgIDs.Count > 0)
-                {
-                    await socketTextChannel.DeleteMessagesAsync(msgIDs);
-                }
+                // Since we kick users in groups, sometimes we won't have users, but the raid will be continuing, we still want to kick these users as they join,
+                // RaidKickMode enables this, as if users continue to join 
+                raidKickModeEnabled = true;
+                // spin up a new task so the GateWay event for this can finish and we don't get GateWay limited
+                await Task.Run(async () => await CrudeRaidKicker(new List<RaidContainer>(usersInRaid), socketTextChannel));
+
+                usersInRaid.Clear();
                 // We return early since this new user won't be in the server anymore.
                 return;
             }
@@ -309,6 +303,35 @@ namespace DiscordBot
             await dm.SendMessageAsync(globalRules);
 
             //TODO: add users when bot was offline
+        }
+
+        private async Task CrudeRaidKicker(List<RaidContainer> raiders, SocketTextChannel channel)
+        {
+            // Short delay to give the Gateway a moment to finish, (this may not be nessisary)
+            List<ulong> msgIDs = new List<ulong>();
+            for (int i = 0; i <= raiders.Count - 1; i++)
+            {
+                var raider = raiders[i];
+                if (raider.message != 0) msgIDs.Add(raider.message);
+                var u = raider.user as IGuildUser;
+                try
+                {
+                    // This can fail, so we have to catch that.
+                    await u.SendMessageAsync(joinKickMessage);
+                }
+                catch (Exception)
+                {
+                    // await _loggingService.LogAction($"{raidProtectLine} Failed to notify user of kick {raider.user.Mention}", false); // We don't save this to file
+                }
+                await u.KickAsync();
+                await _loggingService.LogAction($"{raidProtectLine} {raider.user.Mention} has been kicked due to trending high user join rate.");
+            }
+            raiders.Clear();
+            // Check if we have messages we can delete (Their join message, we delete these in bulk to reduce our already very likely pending rate limit)
+            if (msgIDs.Count > 0 && channel != null)
+            {
+                await channel.DeleteMessagesAsync(msgIDs);
+            }
         }
 
         private async Task UserUpdated(SocketGuildUser oldUser, SocketGuildUser user)
