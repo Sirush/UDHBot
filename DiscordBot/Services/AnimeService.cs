@@ -32,7 +32,7 @@ namespace DiscordBot.Services
 
         public async void PublishDailyAnime()
         {
-            Console.WriteLine("Publish daily anime");
+            await Debug.Log("Anime Publishing", "Publish daily anime");
 
             var channel = _client.GetChannel(_settings.AnimeChannel.Id) as ISocketMessageChannel;
 
@@ -68,7 +68,7 @@ namespace DiscordBot.Services
 
         public async void PublishWeeklyAnime()
         {
-            Console.WriteLine("Publish weekly anime");
+            await Debug.Log("Anime Publishing", "Publish weekly anime");
 
             var channel = _client.GetChannel(_settings.AnimeChannel.Id) as ISocketMessageChannel;
 
@@ -106,7 +106,7 @@ namespace DiscordBot.Services
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                await Debug.LogError("Anime Publishing", e);
                 await _loggingService.LogAction(e.ToString());
                 //throw;
             }

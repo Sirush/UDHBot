@@ -23,7 +23,7 @@ namespace DiscordBot.Skin
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Debug.LogError("Read JSON", e);
                 throw;
             }
         }

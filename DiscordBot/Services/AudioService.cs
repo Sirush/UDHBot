@@ -66,9 +66,9 @@ namespace DiscordBot.Services
             Process ffmpeg = CreateStream(path);
             Stream output = ffmpeg.StandardOutput.BaseStream;
             AudioOutStream discord = client.CreatePCMStream(AudioApplication.Music, 48000);
-            Console.WriteLine("before copy");
+            await Debug.Log("Audio Sending", "Before Copy");
             await output.CopyToAsync(discord);
-            Console.WriteLine("copied");
+            await Debug.Log("Audio Sending", "Copied ");
             await discord.FlushAsync();
         }
     }

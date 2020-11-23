@@ -66,7 +66,7 @@ namespace DiscordBot.Services
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                await Debug.LogError("Feed Error", e);
             }
         }
 

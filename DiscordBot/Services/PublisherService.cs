@@ -40,13 +40,17 @@ namespace DiscordBot.Services
         
         public async Task PublisherAdvertising(uint packageId, ulong userid)
         {
-            Console.WriteLine("pub1 " + packageId);
+            await Debug.Log("Publisher Advertising", "Pub1 " + packageId);
+
             PackageObject package = await GetPackage(packageId);
             PackageHeadObject packageHead = await GetPackageHead(packageId);
             PriceObject packagePrice = await GetPackagePrice(packageId);
-            Console.WriteLine("pub2");
+
+            await Debug.Log("Publisher Advertising", "Pub2");
+
             (string, Stream) r = await GetPublisherAdvertisting(userid, package, packageHead, packagePrice);
-            Console.WriteLine("pub3");
+
+            await Debug.Log("Publisher Advertising", "Pub3");
 
             var channel = _client.GetChannel(_settings.UnityNewsChannel.Id) as ISocketMessageChannel;
             await channel.SendFileAsync(r.Item2, "image.jpg", r.Item1);
@@ -133,19 +137,23 @@ namespace DiscordBot.Services
 
         public async Task<(bool, string)> VerifyPackage(uint packageId)
         {
-            Console.WriteLine("enters verify package");
+            await Debug.Log("Verify Package", "Enters verify package");
+
             PackageObject package = await GetPackage(packageId);
             if (package.content == null) //Package doesn't exist
                 return (false, $"The package id {packageId} doesn't exist.");
+
             if (package.content.publisher.support_email.Length < 2)
                 return (false, "Your package must have a support email defined to be validated.");
 
             string name = (await GetPackageHead(packageId)).result.publisher;
 
-            Console.WriteLine("before sending verification code");
+            await Debug.Log("Verify Package", "Before sending verification code");
             
             await SendVerificationCode(name, package.content.publisher.support_email, packageId);
-            Console.WriteLine("after sending verification code");
+
+            await Debug.Log("Verify Package", "After sending verification code");
+
             return (true,
                 "An email with a validation code was sent. Please type !verify *packageId* *code* to validate your package.\nThis code will be valid for 30 minutes."
                 );
@@ -153,7 +161,7 @@ namespace DiscordBot.Services
 
         public async Task SendVerificationCode(string name, string email, uint packageId)
         {
-            Console.WriteLine("mail");
+            await Debug.Log("Send Verification Code", "Mail");
             byte[] random = new byte[9];
             RandomNumberGenerator rand = RandomNumberGenerator.Create();
             rand.GetBytes(random);
