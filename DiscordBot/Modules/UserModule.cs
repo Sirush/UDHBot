@@ -857,16 +857,34 @@ namespace DiscordBot.Modules
 
         #region temperatures
 
-        [Command("ftoc"), Summary("Converts a temperature in fahrenheit to celsius. Syntax : !ftoc temperature")]
-        private async Task FahrenheitToCelsius(float f)
-        {
-            await ReplyAsync($"{Context.User.Mention} {f}°F is {Math.Round((f - 32) * 0.555555f, 2)}°C.");
-        }
+        [Command("temp"), Alias("temperature"), Summary("Converts temp from any unit to all other units")]
+        private async Task ConvertTemp (float temperature, string unit) {
+            unit = unit.ToLower();
+            
+            var acceptableUnits = new List<string> { "c", "celsius", "f", "fahrenheit", "k", "kelvin" };
 
-        [Command("ctof"), Summary("Converts a temperature in celsius to fahrenheit. Syntax : !ftoc temperature")]
-        private async Task CelsiusToFahrenheit(float c)
-        {
-            await ReplyAsync($"{Context.User.Mention}  {c}°C is {Math.Round(c * 1.8f + 32, 2)}°F");
+            var match = acceptableUnits.FirstOrDefault(x => x.Contains(unit));
+            
+            if (match == null) {
+                var message = await ReplyAsync("Unknown temperature unit");
+                await message.DeleteAfterSeconds(5);
+            } else {
+                if (match.StartsWith("c")) {
+                    await ReplyAsync($"{Context.User.Mention} {temperature}°C converts to " +
+                                               $"{Math.Round(9f / 5f * temperature + 32f, 2)}°F and " +
+                                               $"{Math.Round(temperature + 273, 2)}°K");
+                }
+                if (match.StartsWith("f")) {
+                    await ReplyAsync($"{Context.User.Mention} {temperature}°F converts to " +
+                                               $"{Math.Round(5f / 9f * (temperature - 32), 2)}°C and " +
+                                               $"{Math.Round(5f / 9f * (temperature - 32) + 273, 2)}°K");
+                }
+                if (match.StartsWith("k")) {
+                    await ReplyAsync($"{Context.User.Mention} {temperature}°K converts to " +
+                                               $"{Math.Round(9f / 5f * (temperature - 273) + 32, 2)}°F and " +
+                                               $"{Math.Round(temperature - 273, 2)}°C");
+                }
+            }
         }
 
         #endregion

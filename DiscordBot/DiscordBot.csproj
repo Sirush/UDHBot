@@ -18,4 +18,106 @@
     <Folder Include="SERVER\fonts" />
     <Folder Include="SERVER\images\profiles" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="Settings\Settings.json" />
+    <EmbeddedResource Include="Settings\Settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="Settings\PayWork.json" />
+    <EmbeddedResource Include="Settings\PayWork.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="Settings\Roles.json" />
+    <EmbeddedResource Include="Settings\Roles.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="Settings\Commands.json" />
+    <EmbeddedResource Include="Settings\Commands.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="Settings\Achievements.json" />
+    <EmbeddedResource Include="Settings\Achievements.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="Settings\Rules.json" />
+    <EmbeddedResource Include="Settings\Rules.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="Settings\UserSettings.json" />
+    <EmbeddedResource Include="Settings\UserSettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\fonts\Consolas.ttf" />
+    <EmbeddedResource Include="SERVER\fonts\Consolas.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\fonts\ConsolasBold.ttf" />
+    <EmbeddedResource Include="SERVER\fonts\ConsolasBold.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\fonts\georgia.ttf" />
+    <EmbeddedResource Include="SERVER\fonts\georgia.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\fonts\OpenSans-Regular.ttf" />
+    <EmbeddedResource Include="SERVER\fonts\OpenSans-Regular.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\fonts\OpenSansEmoji.ttf" />
+    <EmbeddedResource Include="SERVER\fonts\OpenSansEmoji.ttf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\images\background.png" />
+    <EmbeddedResource Include="SERVER\images\background.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\images\background_old.png" />
+    <EmbeddedResource Include="SERVER\images\background_old.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\images\default.png" />
+    <EmbeddedResource Include="SERVER\images\default.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\images\foreground.png" />
+    <EmbeddedResource Include="SERVER\images\foreground.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\images\Layout.txt" />
+    <EmbeddedResource Include="SERVER\images\Layout.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\images\levelupcard.png" />
+    <EmbeddedResource Include="SERVER\images\levelupcard.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\images\levelupcardbackground.png" />
+    <EmbeddedResource Include="SERVER\images\levelupcardbackground.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\images\triangle.png" />
+    <EmbeddedResource Include="SERVER\images\triangle.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\skins\background.png" />
+    <EmbeddedResource Include="SERVER\skins\background.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\skins\foreground.png" />
+    <EmbeddedResource Include="SERVER\skins\foreground.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\skins\skin.json" />
+    <EmbeddedResource Include="SERVER\skins\skin.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\skins\skin.default.json" />
+    <EmbeddedResource Include="SERVER\skins\skin.default.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <None Remove="SERVER\FAQs.json" />
+    <EmbeddedResource Include="SERVER\FAQs.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
 </Project>
