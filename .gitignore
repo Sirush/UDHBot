@@ -366,3 +366,5 @@ MigrationBackup/
 *.code-workspace
 
 # End of https://www.toptal.com/developers/gitignore/api/csharp,vscode
+
+.idea/.idea.DiscordBot/.idea/
